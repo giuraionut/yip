@@ -1,38 +1,22 @@
 import { HeartOutlined } from '@ant-design/icons';
 import { useState } from 'react';
+import { DaysMood } from './DaysMood';
 
 export function DateLogicComponent() {
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth(); // Note: Months are zero-based (0 = January, 1 = February, etc.)
   const currentDay = currentDate.getDate();
-  console.log('currentMonth', currentMonth, 'currentDay', currentDay);
 
   interface IMonth {
     title: string;
-    icon: any; // You might want to replace 'any' with more specific props if possible
+    icon: JSX.Element; // Updated 'icon' type to JSX.Element
     color: string;
     index: number;
-    currentMonth?: boolean; // Optional property
+    currentMonth?: boolean;
   }
 
-  interface IDay {
-    title: string;
-    index: number;
-    currentDay?: boolean;
-    mood?: IMood;
-  }
-
-  interface IMood {
-    name: string;
-    color: string;
-    value: number;
-  }
-  const moods: IMood[] = [
-    { name: 'Happy', color: 'bg-green-300', value: 1 },
-    { name: 'Sad', color: 'bg-red-300', value: 2 },
-    { name: 'Normal', color: 'bg-blue-300', value: 3 },
-  ];
+  const dayMoods = DaysMood();
 
   const allMonths: IMonth[] = [
     { title: 'January', icon: <HeartOutlined />, color: 'blue', index: 0 },
@@ -47,12 +31,10 @@ export function DateLogicComponent() {
     { title: 'October', icon: <HeartOutlined />, color: 'orange', index: 9 },
     { title: 'November', icon: <HeartOutlined />, color: 'blue', index: 10 },
     { title: 'December', icon: <HeartOutlined />, color: 'green', index: 11 },
-  ];
-  allMonths.forEach((month) => {
-    if (month.index === currentMonth) {
-      month.currentMonth = true;
-    }
-  });
+  ].map((month) => ({
+    ...month,
+    currentMonth: month.index === currentMonth,
+  }));
 
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedDay, setSelectedDay] = useState(currentDay);
@@ -62,17 +44,23 @@ export function DateLogicComponent() {
   };
 
   const getAllDaysOfMonth = (month: number, year: number) => {
-    const days: IDay[] = [];
     const totalDays = daysInMonth(month, year);
-    for (let index = 1; index <= totalDays; index++) {
-      const date = new Date(year, month, index);
+    return Array.from({ length: totalDays }, (_, index) => {
+      const date = new Date(year, month, index + 1);
       const title = date.toLocaleString('en-US', { weekday: 'long' });
-      if (index === currentDay && currentMonth === selectedMonth) {
-        days.push({ index, title, currentDay: true });
-      }
-      days.push({ index, title, mood: moods[2] });
-    }
-    return days;
+      const moodForDay = dayMoods.find(
+        (daymood) =>
+          daymood.day === index + 1 &&
+          daymood.month === month &&
+          daymood.year === year
+      );
+      return {
+        index: index + 1,
+        title,
+        currentDay: index + 1 === currentDay && month === currentMonth,
+        mood: moodForDay?.mood,
+      };
+    });
   };
 
   return {
@@ -80,9 +68,9 @@ export function DateLogicComponent() {
     setSelectedMonth,
     currentYear,
     selectedDay,
+    currentDay,
     setSelectedDay,
     getAllDaysOfMonth,
     allMonths,
-    moods,
   };
 }
