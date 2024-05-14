@@ -71,52 +71,80 @@ const Home: React.FC = () => {
   const daysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
+  const [data, setData] = useState([]);
+  const [config, setConfig] = useState();
 
-  const config = {
-    data: [
-      { mood: 'Amazing', value: 5 ,},
-      { mood: 'Good', value: 6 ,},
-      { mood: 'Bad', value: 6 ,},
-      { mood: 'Normal', value: 4 ,},
-      { mood: 'Sick', value: 9 ,},
-    ],
-    angleField: 'value',
-    colorField: 'mood',
-    color: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'],
-    paddingRight: 80,
-    innerRadius: 0.6,
-    style: {
-      stroke: '#fff',
-      inset: 1,
-      radius: 10,
-    },
-    label: {
-      text: 'value',
-      style: {
-        fontWeight: 'bold',
-      },
-    },
-    legend: {
-      color: {
-        title: false,
-        position: 'right',
-        rowPadding: 5,
-      },
-    },
-    annotations: [
-      {
-        type: 'text',
-        style: {
-          text: allMonths[selectedMonth].title,
-          x: '50%',
-          y: '50%',
-          textAlign: 'center',
-          fontSize: 40,
-          fontStyle: 'bold',
-        },
-      },
-    ],
+
+  const pushToPie = () => {
+    console.log('pushed');
+    const updatedData = [...data];
+    const index = updatedData.findIndex(item => item.mood === 'Okeish');
+    if (index !== -1) {
+      // If the mood already exists, increase its value
+      updatedData[index].value += 10; // Increase the value by 10 (adjust as needed)
+    } else {
+      // Otherwise, add the new mood
+      updatedData.push({ mood: 'Okeish', value: 10 });
+    }
+    setData(updatedData);
   };
+  
+  useEffect(() => {
+    const moods = [
+      { mood: 'Amazing', value: 5 },
+      { mood: 'Good', value: 6 },
+      { mood: 'Bad', value: 6 },
+      { mood: 'Normal', value: 4 },
+      { mood: 'Sick', value: 9 },
+    ];
+    setData(moods);
+  }, []);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      const config = {
+        data: data,
+        angleField: 'value',
+        colorField: 'mood',
+        color: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'],
+        paddingRight: 80,
+        innerRadius: 0.6,
+        style: {
+          stroke: '#fff',
+          inset: 1,
+          radius: 10,
+        },
+        label: {
+          text: 'value',
+          style: {
+            fontWeight: 'bold',
+          },
+        },
+        legend: {
+          color: {
+            title: false,
+            position: 'right',
+            rowPadding: 5,
+          },
+        },
+        annotations: [
+          {
+            type: 'text',
+            style: {
+              text: allMonths[selectedMonth].title,
+              x: '50%',
+              y: '50%',
+              textAlign: 'center',
+              fontSize: 40,
+              fontStyle: 'bold',
+            },
+          },
+        ],
+      };
+  
+      setConfig(config);
+    }
+  }, [data]);
   useEffect(() => {
     const fetchMoods = async () => {
       try {
@@ -184,7 +212,7 @@ const Home: React.FC = () => {
 
     fetchDayMoods();
   }, [selectedMonth, currentYear]);
-
+ 
   const createDayMood = async (data: DayMood) => {
     try {
       const response = await fetch('/api/daymood', {
@@ -305,6 +333,7 @@ const Home: React.FC = () => {
                 //@ts-ignore
                 <Pie {...config} />
               }
+              <Button onClick={pushToPie}>Push</Button>
             </div>
           </div>
 
