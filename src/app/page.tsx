@@ -92,13 +92,9 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (days.length > 0) {
-      console.log('days', days);
       const currentMonthMoods: Mood[] = days
         .map((day: IDay) => day?.mood)
         .filter((mood): mood is Mood => mood !== undefined);
-
-      console.log('currentMonthMoods', currentMonthMoods);
-
       const formattedData = currentMonthMoods.reduce(
         (result: { mood: string; value: number; color: string }[], mood) => {
           const existingMood = result.find((item) => item.mood === mood?.name);
@@ -150,7 +146,7 @@ const Home: React.FC = () => {
 
       setChartData(chartData);
     }
-  }, [moods]);
+  }, [days]);
 
   useEffect(() => {
     const fetchDayMoods = async () => {
@@ -317,7 +313,6 @@ const Home: React.FC = () => {
                   <Doughnut data={chartData} options={chartOptions} />
                 </div>
               )}
-              <Button onClick={pushToPie}>Push</Button>
             </div>
           </div>
 
