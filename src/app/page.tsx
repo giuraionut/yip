@@ -1,35 +1,25 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Tag, Card, Modal, Flex, Button, Spin } from 'antd';
-import { DayMood, Mood } from '@prisma/client';
 import {
   HeartOutlined,
   CheckCircleFilled,
   LoadingOutlined,
 } from '@ant-design/icons';
-import dynamic from 'next/dynamic';
-const Pie = dynamic(
-  () => import('@ant-design/plots').then((mod) => mod.Pie) as any,
-  { ssr: false }
-);
-interface IDay {
-  title: string;
-  index: number;
-  currentDay?: boolean;
-  mood?: Mood;
-}
-interface MyDayMood extends DayMood {
-  mood: Mood;
-}
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  ChartOptions,
+  ChartData,
+} from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+import { Mood, DayMood } from '@prisma/client';
+import { IDay, MyDayMood, IMonth } from './types/interfaces';
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Home: React.FC = () => {
-  interface IMonth {
-    title: string;
-    icon: JSX.Element; // Updated 'icon' type to JSX.Element
-    color: string;
-    index: number;
-    currentMonth?: boolean;
-  }
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth(); // Note: Months are zero-based (0 = January, 1 = February, etc.)
@@ -38,7 +28,8 @@ const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [days, setDays] = useState<IDay[]>([]);
   const [selectedDay, setSelectedDay] = useState(currentDay);
-  const [loading, setLoading] = useState(true);
+  const [daysLoading, setDaysLoading] = useState(true);
+  const [moodsLoading, setMoodsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [moods, setMoods] = useState<Mood[]>([]); // Annotate moods as Mood[]
   const [buttonIconPosition, setButtonIconPosition] = useState<'start' | 'end'>(
@@ -71,80 +62,10 @@ const Home: React.FC = () => {
   const daysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
-  const [data, setData] = useState([]);
-  const [config, setConfig] = useState();
+  const [chartData, setChartData] = useState<ChartData<'doughnut'>>();
+  const [chartOptions, setChartOptions] = useState<ChartOptions<'doughnut'>>();
+  const pushToPie = () => {};
 
-
-  const pushToPie = () => {
-    console.log('pushed');
-    const updatedData = [...data];
-    const index = updatedData.findIndex(item => item.mood === 'Okeish');
-    if (index !== -1) {
-      // If the mood already exists, increase its value
-      updatedData[index].value += 10; // Increase the value by 10 (adjust as needed)
-    } else {
-      // Otherwise, add the new mood
-      updatedData.push({ mood: 'Okeish', value: 10 });
-    }
-    setData(updatedData);
-  };
-  
-  useEffect(() => {
-    const moods = [
-      { mood: 'Amazing', value: 5 },
-      { mood: 'Good', value: 6 },
-      { mood: 'Bad', value: 6 },
-      { mood: 'Normal', value: 4 },
-      { mood: 'Sick', value: 9 },
-    ];
-    setData(moods);
-  }, []);
-
-  useEffect(() => {
-    if (data.length > 0) {
-      const config = {
-        data: data,
-        angleField: 'value',
-        colorField: 'mood',
-        color: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd'],
-        paddingRight: 80,
-        innerRadius: 0.6,
-        style: {
-          stroke: '#fff',
-          inset: 1,
-          radius: 10,
-        },
-        label: {
-          text: 'value',
-          style: {
-            fontWeight: 'bold',
-          },
-        },
-        legend: {
-          color: {
-            title: false,
-            position: 'right',
-            rowPadding: 5,
-          },
-        },
-        annotations: [
-          {
-            type: 'text',
-            style: {
-              text: allMonths[selectedMonth].title,
-              x: '50%',
-              y: '50%',
-              textAlign: 'center',
-              fontSize: 40,
-              fontStyle: 'bold',
-            },
-          },
-        ],
-      };
-  
-      setConfig(config);
-    }
-  }, [data]);
   useEffect(() => {
     const fetchMoods = async () => {
       try {
@@ -158,6 +79,7 @@ const Home: React.FC = () => {
           const data = await response.json();
 
           setMoods(data);
+          setMoodsLoading(false);
         } else {
           throw new Error('Failed to fetch moods');
         }
@@ -165,9 +87,70 @@ const Home: React.FC = () => {
         console.log(error);
       }
     };
-
     fetchMoods();
   }, []);
+
+  useEffect(() => {
+    if (days.length > 0) {
+      console.log('days', days);
+      const currentMonthMoods: Mood[] = days
+        .map((day: IDay) => day?.mood)
+        .filter((mood): mood is Mood => mood !== undefined);
+
+      console.log('currentMonthMoods', currentMonthMoods);
+
+      const formattedData = currentMonthMoods.reduce(
+        (result: { mood: string; value: number; color: string }[], mood) => {
+          const existingMood = result.find((item) => item.mood === mood?.name);
+          if (existingMood) {
+            existingMood.value++;
+          } else {
+            result.push({
+              mood: mood.name,
+              value: 1,
+              color: mood.color,
+            });
+          }
+          return result;
+        },
+        []
+      );
+      const labels = formattedData.map((data) => data.mood);
+      const data = formattedData.map((data) => data.value);
+      const colors = formattedData.map((data) => data.color);
+      const options: ChartOptions<'doughnut'> = {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'right',
+            align: 'start',
+            labels: {
+              color: '#fff',
+              font: {
+                weight: 'normal',
+                size: 14,
+              },
+            },
+          },
+        },
+      };
+      setChartOptions(options);
+      const chartData: ChartData<'doughnut'> = {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Days',
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 1,
+            hoverOffset: 4,
+          },
+        ],
+      };
+
+      setChartData(chartData);
+    }
+  }, [moods]);
 
   useEffect(() => {
     const fetchDayMoods = async () => {
@@ -200,19 +183,19 @@ const Home: React.FC = () => {
             };
           });
           setDays(d);
-          setLoading(false); // Move setLoading inside the success branch of the if statement
+          setDaysLoading(false); // Move setLoading inside the success branch of the if statement
         } else {
           throw new Error('Failed to fetch day moods');
         }
       } catch (error) {
         console.log(error);
-        setLoading(false); // Move setLoading inside the catch block to handle errors
+        setDaysLoading(false); // Move setLoading inside the catch block to handle errors
       }
     };
 
     fetchDayMoods();
   }, [selectedMonth, currentYear]);
- 
+
   const createDayMood = async (data: DayMood) => {
     try {
       const response = await fetch('/api/daymood', {
@@ -295,7 +278,7 @@ const Home: React.FC = () => {
       ))
     : [];
 
-  return loading ? (
+  return daysLoading ? (
     <div className='bg-slate-500 h-screen'>
       <div className='grid h-screen place-items-center'>
         <Spin />
@@ -329,10 +312,11 @@ const Home: React.FC = () => {
             </div>
             <div className='grid grid-cols-4 gap-2'>{months}</div>
             <div>
-              {
-                //@ts-ignore
-                <Pie {...config} />
-              }
+              {chartData && chartOptions && (
+                <div className='w-full max-w-md'>
+                  <Doughnut data={chartData} options={chartOptions} />
+                </div>
+              )}
               <Button onClick={pushToPie}>Push</Button>
             </div>
           </div>
