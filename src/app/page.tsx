@@ -17,7 +17,7 @@ const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [days, setDays] = useState<IDay[]>([]);
   const [selectedDay, setSelectedDay] = useState(currentDay);
-  const [daysLoading, setDaysLoading] = useState(false);
+  const [daysLoading, setDaysLoading] = useState(true);
   const [moodsLoading, setMoodsLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [moods, setMoods] = useState<Mood[]>([]); // Annotate moods as Mood[]
