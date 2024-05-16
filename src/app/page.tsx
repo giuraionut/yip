@@ -5,8 +5,9 @@ import { Mood, DayMood } from '@prisma/client';
 import { IDay } from './types/interfaces';
 import MonthSelector from './components/monthSelector';
 import DayCards from './components/dayCards';
-import MoodModal from './components/moodModal';
+import SetMoodModal from './components/setMoodModal';
 import MoodChart from './components/moodChart';
+import NavBar from './components/navBar';
 
 const Home: React.FC = () => {
   const currentDate = new Date();
@@ -14,7 +15,9 @@ const Home: React.FC = () => {
   const currentMonth = currentDate.getMonth(); // Note: Months are zero-based (0 = January, 1 = February, etc.)
   const currentDay = currentDate.getDate();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDayModalOpen, setIsDayModalOpen] = useState(false);
+  const [isMoodsConfigurationModalOpen, setIsMoodsConfigurationModalOpen] =
+    useState(false);
   const [days, setDays] = useState<IDay[]>([]);
   const [selectedDay, setSelectedDay] = useState(currentDay);
   const [daysLoading, setDaysLoading] = useState(true);
@@ -24,12 +27,9 @@ const Home: React.FC = () => {
   const [buttonIconPosition, setButtonIconPosition] = useState<'start' | 'end'>(
     'end'
   );
+  const [tags, setTags] = useState(['Tag 1', 'Tag 2', 'Tag 3']);
 
   const [createDayMoodLoading, setCreateDayMoodLoading] = useState(false);
-  const showModal = () => setIsModalOpen(true);
-  const handleOk = () => setIsModalOpen(false);
-  const handleCancel = () => setIsModalOpen(false);
-
   const daysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
@@ -73,7 +73,7 @@ const Home: React.FC = () => {
           const totalDays = daysInMonth(selectedMonth, currentYear);
           const d = Array.from({ length: totalDays }, (_, index) => {
             const date = new Date(currentYear, selectedMonth, index + 1);
-            const title = date.toLocaleString('en-US', { weekday: 'long' });
+            const title = date.toLocaleString('en-US', { weekday: 'short' });
             const moodForDay = data.find(
               (daymood: DayMood) =>
                 daymood.day === index + 1 &&
@@ -110,10 +110,12 @@ const Home: React.FC = () => {
     </div>
   ) : (
     <>
-      <MoodModal
-        isModalOpen={isModalOpen}
-        handleCancel={handleCancel}
-        handleOk={handleOk}
+      <SetMoodModal
+        tags={tags}
+        setTags={setTags}
+        isModalOpen={isDayModalOpen}
+        handleCancel={() => setIsDayModalOpen(false)}
+        handleOk={() => setIsDayModalOpen(false)}
         moods={moods}
         selectedDay={selectedDay}
         selectedMonth={selectedMonth}
@@ -122,7 +124,9 @@ const Home: React.FC = () => {
         setCreateDayMoodLoading={setCreateDayMoodLoading}
         createDayMoodLoading={createDayMoodLoading}
       />
-      <div className='bg-slate-500 h-screen'>
+
+      <div className='bg-slate-500 h-screen p-2'>
+        <NavBar setModalOpen={setIsMoodsConfigurationModalOpen} />
         <div className='grid grid-cols-2 gap-2 p-5'>
           <div className='flex flex-col gap-3 p-5'>
             <div className='text-white font-bold bg-slate-700 p-2 rounded-md'>
@@ -145,7 +149,7 @@ const Home: React.FC = () => {
             <DayCards
               days={days}
               setSelectedDay={setSelectedDay}
-              setIsModalOpen={setIsModalOpen}
+              setIsModalOpen={setIsDayModalOpen}
             />
           </div>
         </div>
