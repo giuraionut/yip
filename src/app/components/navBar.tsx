@@ -9,7 +9,7 @@ const NavBar: React.FC<{ setModalOpen: (open: boolean) => void }> = ({
       <Button
         type='primary'
         icon={<SmileFilled />}
-        onClick={()=>setModalOpen(true)}
+        onClick={() => setModalOpen(true)}
       >
         Moods
       </Button>

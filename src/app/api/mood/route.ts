@@ -30,3 +30,20 @@ export async function POST(req: Request) {
         await prisma.$disconnect()
     }
 }
+
+
+export async function DELETE(req: Request) {
+    try {
+        const { id } = await req.json();
+        if (!id) {
+            return new NextResponse("Bad Request", { status: 400 });
+        }
+        await prisma.mood.delete({ where: { id: Number(id) } });
+        return new NextResponse("Mood deleted successfully", { status: 200 });
+    } catch (error) {
+        console.error("Error deleting mood:", error);
+        return new NextResponse("Internal Server Error", { status: 500 });
+    } finally {
+        await prisma.$disconnect();
+    }
+}

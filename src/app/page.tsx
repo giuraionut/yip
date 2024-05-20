@@ -111,8 +111,7 @@ const Home: React.FC = () => {
   ) : (
     <>
       <SetMoodModal
-        tags={tags}
-        setTags={setTags}
+        days={days}
         isModalOpen={isDayModalOpen}
         handleCancel={() => setIsDayModalOpen(false)}
         handleOk={() => setIsDayModalOpen(false)}
@@ -121,6 +120,7 @@ const Home: React.FC = () => {
         selectedMonth={selectedMonth}
         currentYear={currentYear}
         setDays={setDays}
+        setMoods={setMoods}
         setCreateDayMoodLoading={setCreateDayMoodLoading}
         createDayMoodLoading={createDayMoodLoading}
       />
