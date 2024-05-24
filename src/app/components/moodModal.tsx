@@ -14,8 +14,7 @@ import { Mood, DayMood } from '@prisma/client';
 import { IDay, MyDayMood } from '../types/interfaces';
 import { PlusOutlined } from '@ant-design/icons';
 
-const SetMoodModal: React.FC<{
-  days: IDay[];
+const MoodModal: React.FC<{
   isModalOpen: boolean;
   handleCancel: () => void;
   handleOk: () => void;
@@ -27,8 +26,8 @@ const SetMoodModal: React.FC<{
   setDays: React.Dispatch<React.SetStateAction<IDay[]>>;
   setCreateDayMoodLoading: React.Dispatch<React.SetStateAction<boolean>>;
   createDayMoodLoading: boolean;
+  moodsLoading: boolean;
 }> = ({
-  days,
   isModalOpen,
   handleCancel,
   handleOk,
@@ -40,6 +39,7 @@ const SetMoodModal: React.FC<{
   setMoods,
   setCreateDayMoodLoading,
   createDayMoodLoading,
+  moodsLoading,
 }) => {
   const { token } = theme.useToken();
   const [inputVisible, setInputVisible] = useState(false);
@@ -266,4 +266,4 @@ const SetMoodModal: React.FC<{
   );
 };
 
-export default SetMoodModal;
+export default MoodModal;

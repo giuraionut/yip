@@ -15,7 +15,7 @@ const DayCards: React.FC<{
             day.mood
               ? { backgroundColor: day.mood.color }
               : day.currentDay
-              ? { backgroundColor: 'rgb(96 165 250)' }
+              ? { backgroundColor: 'red' }
               : { backgroundColor: 'rgb(51 65 85)' }
           }
           key={day.index}

@@ -22,6 +22,9 @@ const months: IMonth[] = [
   { title: 'December', icon: <HeartOutlined />, color: 'green', index: 11 },
 ];
 
+export const currentMonthName = (index:number) =>{
+  return months[index].title;
+} 
 const MonthSelector: React.FC<{
   selectedMonth: number;
   setSelectedMonth: (month: number) => void;

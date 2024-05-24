@@ -1,105 +1,63 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Spin } from 'antd';
-import { Mood, DayMood } from '@prisma/client';
+import { Mood } from '@prisma/client';
 import { IDay } from './types/interfaces';
-import MonthSelector from './components/monthSelector';
+import MonthSelector, { currentMonthName } from './components/monthSelector';
 import DayCards from './components/dayCards';
-import SetMoodModal from './components/setMoodModal';
+import MoodModal from './components/moodModal';
 import MoodChart from './components/moodChart';
 import NavBar from './components/navBar';
+import moodService from './services/moodService';
+import dayMoodService from './services/dayMoodService';
 
 const Home: React.FC = () => {
   const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth(); // Note: Months are zero-based (0 = January, 1 = February, etc.)
-  const currentDay = currentDate.getDate();
-
+  const [currentDay, currentMonth, currentYear] = [
+    currentDate.getDate(),
+    currentDate.getMonth(),
+    currentDate.getFullYear(),
+  ];
   const [isDayModalOpen, setIsDayModalOpen] = useState(false);
-  const [isMoodsConfigurationModalOpen, setIsMoodsConfigurationModalOpen] =
-    useState(false);
+
   const [days, setDays] = useState<IDay[]>([]);
   const [selectedDay, setSelectedDay] = useState(currentDay);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [moods, setMoods] = useState<Mood[]>([]);
+
   const [daysLoading, setDaysLoading] = useState(true);
   const [moodsLoading, setMoodsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [moods, setMoods] = useState<Mood[]>([]); // Annotate moods as Mood[]
-  const [buttonIconPosition, setButtonIconPosition] = useState<'start' | 'end'>(
-    'end'
-  );
-  const [tags, setTags] = useState(['Tag 1', 'Tag 2', 'Tag 3']);
-
   const [createDayMoodLoading, setCreateDayMoodLoading] = useState(false);
-  const daysInMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+
+  const { fetchMoods } = moodService();
+  const { fetchDayMoods } = dayMoodService();
 
   useEffect(() => {
-    const fetchMoods = async () => {
+    const loadMoods = async () => {
       try {
-        const response = await fetch('/api/mood', {
-          headers: {
-            Accept: 'application/json',
-            method: 'GET',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-
-          setMoods(data);
-          setMoodsLoading(false);
-        } else {
-          throw new Error('Failed to fetch moods');
-        }
+        const moods = await fetchMoods();
+        setMoods(moods);
+        setMoodsLoading(false);
       } catch (error) {
-        console.log(error);
+      } finally {
+        setMoodsLoading(false);
       }
     };
-    fetchMoods();
+    loadMoods();
   }, []);
 
   useEffect(() => {
-    const fetchDayMoods = async () => {
+    const loadDayMoods = async () => {
       try {
-        const response = await fetch('/api/daymood', {
-          headers: {
-            Accept: 'application/json',
-            method: 'GET',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-
-          const totalDays = daysInMonth(selectedMonth, currentYear);
-          const d = Array.from({ length: totalDays }, (_, index) => {
-            const date = new Date(currentYear, selectedMonth, index + 1);
-            const title = date.toLocaleString('en-US', { weekday: 'short' });
-            const moodForDay = data.find(
-              (daymood: DayMood) =>
-                daymood.day === index + 1 &&
-                daymood.month === selectedMonth &&
-                daymood.year === currentYear
-            );
-            return {
-              index: index + 1,
-              title,
-              currentDay:
-                index + 1 === currentDay && selectedMonth === currentMonth,
-              mood: moodForDay?.mood,
-            };
-          });
-          setDays(d);
-          setDaysLoading(false); // Move setLoading inside the success branch of the if statement
-        } else {
-          throw new Error('Failed to fetch day moods');
-        }
+        const dayMoods = await fetchDayMoods(selectedMonth, currentYear);
+        setDays(dayMoods);
+        setDaysLoading(false);
       } catch (error) {
-        console.log(error);
-        setDaysLoading(false); // Move setLoading inside the catch block to handle errors
+      } finally {
+        setDaysLoading(false);
       }
     };
-
-    fetchDayMoods();
+    loadDayMoods();
   }, [selectedMonth, currentYear]);
 
   return daysLoading ? (
@@ -110,8 +68,7 @@ const Home: React.FC = () => {
     </div>
   ) : (
     <>
-      <SetMoodModal
-        days={days}
+      <MoodModal
         isModalOpen={isDayModalOpen}
         handleCancel={() => setIsDayModalOpen(false)}
         handleOk={() => setIsDayModalOpen(false)}
@@ -123,10 +80,11 @@ const Home: React.FC = () => {
         setMoods={setMoods}
         setCreateDayMoodLoading={setCreateDayMoodLoading}
         createDayMoodLoading={createDayMoodLoading}
+        moodsLoading={moodsLoading}
       />
 
       <div className='bg-slate-500 h-screen p-2'>
-        <NavBar setModalOpen={setIsMoodsConfigurationModalOpen} />
+        <NavBar />
         <div className='grid grid-cols-2 gap-2 p-5'>
           <div className='flex flex-col gap-3 p-5'>
             <div className='text-white font-bold bg-slate-700 p-2 rounded-md'>
@@ -144,7 +102,7 @@ const Home: React.FC = () => {
 
           <div className='flex flex-col gap-3 p-5'>
             <div className='text-white font-bold bg-slate-700 p-2 rounded-md'>
-              currentMonth
+              {currentMonthName(selectedMonth)}
             </div>
             <DayCards
               days={days}
