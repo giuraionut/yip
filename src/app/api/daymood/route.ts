@@ -22,9 +22,26 @@ export async function GET(req: any, res: any) {
 export async function POST(req: Request) {
     try {
         const data = await req.json();
-        const mood = await prisma.dayMood.create({ data });
+        const { day, month, year } = data;
+        const mood = await prisma.dayMood.upsert({
+            where: {
+                day_month_year: {
+                    day: Number(day),
+                    month: Number(month),
+                    year: Number(year)
+                }
+            },
+            update: { ...data },
+            create: { ...data }
+        });
         const createdMood = await prisma.dayMood.findUnique({
-            where: { id: mood.id },
+            where: {
+                day_month_year: {
+                    day: Number(day),
+                    month: Number(month),
+                    year: Number(year)
+                }
+            },
             include: {
                 mood: true
             }
@@ -46,7 +63,7 @@ export async function DELETE(req: Request) {
         console.log(day, month, year);
         const deletedMood = await prisma.dayMood.delete({
             where: {
-                unique_day_month_year: {
+                day_month_year: {
                     day: Number(day),
                     month: Number(month),
                     year: Number(year)

@@ -18,12 +18,11 @@ model Mood {
 }
 
 model DayMood {
-  id     Int  @id @default(autoincrement())
   mood   Mood @relation(fields: [moodId], references: [id])
   moodId Int
   day    Int
   month  Int
   year   Int
 
-  @@unique([day, month, year], name: "unique_day_month_year")
+  @@id([day, month, year])
 }
