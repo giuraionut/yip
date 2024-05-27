@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Tag,
@@ -9,11 +9,15 @@ import {
   theme,
   Input,
   ColorPicker,
+  notification,
 } from 'antd';
 import { Mood, DayMood } from '@prisma/client';
 import { IDay, MyDayMood } from '../types/interfaces';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, RadiusUprightOutlined } from '@ant-design/icons';
+import type { NotificationArgsProps } from 'antd';
+import { currentMonthName } from './monthSelector';
 
+type NotificationPlacement = NotificationArgsProps['placement'];
 const MoodModal: React.FC<{
   isModalOpen: boolean;
   handleCancel: () => void;
@@ -41,11 +45,24 @@ const MoodModal: React.FC<{
   createDayMoodLoading,
   moodsLoading,
 }) => {
+  const [api, contextHolder] = notification.useNotification();
+
   const { token } = theme.useToken();
   const [inputVisible, setInputVisible] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<InputRef>(null);
   const [colorPickerValue, setColorPickerValue] = useState('rgb(251 146 150)');
+  const moodNotification = (
+    placement: NotificationPlacement,
+    description: string,
+    message: string
+  ) => {
+    api.info({
+      message: message,
+      description: description,
+      placement,
+    });
+  };
   const createDayMood = async (data: DayMood) => {
     try {
       const response = await fetch('/api/daymood', {
@@ -63,9 +80,18 @@ const MoodModal: React.FC<{
         })
       );
       setCreateDayMoodLoading(false);
+      moodNotification(
+        'topRight',
+        `Today, you set your mood as ${newDayMood.mood.name}`,
+        'Mood created succesfully!'
+      );
     } catch (error) {
       console.error('Error creating mood:', error);
-      // Provide user feedback, e.g., display an error message
+      moodNotification(
+        'topRight',
+        "For some reason the mood can't be created, try again later...",
+        'Creating mood failed'
+      );
     }
   };
 
@@ -82,37 +108,55 @@ const MoodModal: React.FC<{
       if (response.ok) {
         const data: Mood = await response.json();
         console.log(data);
+        moodNotification(
+          'topRight',
+          `You created a new mood tag: ${moodName}`,
+          'Mood tag created successfully'
+        );
         return data;
       } else {
         throw new Error('Failed to fetch moods');
       }
     } catch (error) {
       console.log(error);
+      moodNotification(
+        'topRight',
+        `For some reason, creating ${moodName} mood tag failed...`,
+        'Creating mood tag failed'
+      );
       return undefined;
     }
   };
 
-  const deleteMood = async (moodId: number) => {
+  const deleteMood = async (mood: Mood) => {
     try {
       const response = await fetch('/api/mood', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: moodId }),
+        body: JSON.stringify({ id: mood.id }),
       });
       if (!response.ok) {
         throw new Error('Failed to delete mood');
       }
       console.log('Mood deleted successfully');
+      moodNotification(
+        'topRight',
+        `The mood tag "${mood.name}" was deleted with success!`,
+        'Mood tag deleted successfully!'
+      );
     } catch (error) {
       console.error('Error deleting mood:', error);
+      moodNotification(
+        'topRight',
+        `For some reason, deleting the mood tag "${mood.name}" failed...`,
+        'Deleting mood tag failed'
+      );
     }
   };
   const handleCreateDayMood = async (mood: Mood) => {
     setCreateDayMoodLoading(true);
-    //@ts-ignore
-
     const dayMood: DayMood = {
       day: selectedDay,
       month: selectedMonth,
@@ -121,7 +165,7 @@ const MoodModal: React.FC<{
     };
     await createDayMood(dayMood);
     setCreateDayMoodLoading(false);
-    handleOk();
+    // handleOk();
   };
 
   useEffect(() => {
@@ -133,7 +177,7 @@ const MoodModal: React.FC<{
   const handleClose = async (removedMood: Mood) => {
     const newMoods = moods.filter((mood) => mood.id !== removedMood.id);
     console.log(newMoods);
-    await deleteMood(removedMood.id);
+    await deleteMood(removedMood);
     setMoods(newMoods);
   };
 
@@ -194,8 +238,20 @@ const MoodModal: React.FC<{
               : day;
           })
         );
+        moodNotification(
+          'topRight',
+          `Mood for ${selectedDay} of ${currentMonthName(
+            selectedMonth
+          )} was reseted successfully!`,
+          'Mood deleted succesfully'
+        );
         console.log('Mood deleted successfully');
       } else {
+        moodNotification(
+          'topRight',
+          "For some reason the mood can't be deleteMood, try again later...",
+          'Deleting mood failed'
+        );
         console.error('Failed to delete mood');
       }
     } catch (error) {
@@ -217,52 +273,54 @@ const MoodModal: React.FC<{
   };
 
   return (
-    <Modal
-      title='How was your day?'
-      open={isModalOpen}
-      onCancel={handleCancel}
-      footer={[
-        <Button key='closeModal' onClick={handleCancel} type='primary'>
-          Close
-        </Button>,
-        <Button key='resetMood' onClick={resetMood} type='primary'>
-          Reset Mood
-        </Button>,
-      ]}
-    >
-      <Flex gap='10px' vertical>
-        <Flex gap='5px' wrap>
-          {moodTags}
-        </Flex>
-        {createDayMoodLoading ? <Spin /> : ''}
-        {inputVisible ? (
-          <Input
-            ref={inputRef}
-            type='text'
-            size='small'
-            style={{ width: 78 }}
-            value={inputValue}
-            onChange={handleInputChange}
-            onBlur={handleInputConfirm}
-            onPressEnter={handleInputConfirm}
-          />
-        ) : (
-          <Flex gap='10px' wrap>
-            <ColorPicker
-              size='small'
-              defaultValue={colorPickerValue}
-              onChange={(_, hex) => {
-                setColorPickerValue(hexToRgb(hex));
-              }}
-            />
-
-            <Tag onClick={showInput} color={colorPickerValue}>
-              <PlusOutlined /> New Tag
-            </Tag>
+    <>
+      {contextHolder}
+      <Modal
+        title='How was your day?'
+        open={isModalOpen}
+        onCancel={handleCancel}
+        footer={[
+          <Button key='closeModal' onClick={handleCancel} type='primary'>
+            Close
+          </Button>,
+          <Button key='resetMood' onClick={resetMood} type='primary'>
+            Reset Mood
+          </Button>,
+        ]}
+      >
+        <Flex gap='10px' vertical>
+          <Flex gap='5px' wrap>
+            {moodTags}
           </Flex>
-        )}
-      </Flex>
-    </Modal>
+          {createDayMoodLoading ? <Spin /> : ''}
+          {inputVisible ? (
+            <Input
+              ref={inputRef}
+              type='text'
+              size='small'
+              style={{ width: 78 }}
+              value={inputValue}
+              onChange={handleInputChange}
+              onBlur={handleInputConfirm}
+              onPressEnter={handleInputConfirm}
+            />
+          ) : (
+            <Flex gap='10px' wrap>
+              <ColorPicker
+                size='small'
+                defaultValue={colorPickerValue}
+                onChange={(_, hex) => {
+                  setColorPickerValue(hexToRgb(hex));
+                }}
+              />
+              <Tag onClick={showInput} color={colorPickerValue}>
+                <PlusOutlined /> New Tag
+              </Tag>
+            </Flex>
+          )}
+        </Flex>
+      </Modal>
+    </>
   );
 };
 
