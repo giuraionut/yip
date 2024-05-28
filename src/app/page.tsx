@@ -6,11 +6,14 @@ import { IDay } from './types/interfaces';
 import MonthSelector, { currentMonthName } from './components/monthSelector';
 import DayCards from './components/dayCards';
 import MoodModal from './components/moodModal';
-import MoodChart from './components/moodChart';
 import NavBar from './components/navBar';
 import moodService from './services/moodService';
 import dayMoodService from './services/dayMoodService';
-
+import { Tabs } from 'antd';
+import type { TabsProps } from 'antd';
+import Link from 'next/link';
+import DoughnutChart from './components/doughnutChart';
+import RadarChart from './components/radarChart';
 const Home: React.FC = () => {
   const currentDate = new Date();
   const [currentDay, currentMonth, currentYear] = [
@@ -31,6 +34,30 @@ const Home: React.FC = () => {
 
   const { fetchMoods } = moodService();
   const { fetchDayMoods } = dayMoodService();
+
+  const tabsExtraAction = (
+    <Link href='https://www.google.ro'>View more statistics</Link>
+  );
+  const onChangeTabs = (key: string) => {
+    console.log(key);
+  };
+  const items: TabsProps['items'] = [
+    {
+      key: '1',
+      label: 'Doughnut View',
+      children: <DoughnutChart days={days} />,
+    },
+    {
+      key: '2',
+      label: 'Radar View',
+      children: <RadarChart days={days} />,
+    },
+    {
+      key: '3',
+      label: 'Tab 3',
+      children: 'Content of Tab Pane 3',
+    },
+  ];
 
   useEffect(() => {
     const loadMoods = async () => {
@@ -96,7 +123,12 @@ const Home: React.FC = () => {
               currentMonth={currentMonth}
             />
             <div>
-              <MoodChart days={days} />
+              <Tabs
+                tabBarExtraContent={tabsExtraAction}
+                defaultActiveKey='1'
+                items={items}
+                onChange={onChangeTabs}
+              />
             </div>
           </div>
 

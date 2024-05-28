@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import {
   Chart as ChartJS,
-  ArcElement,
   Tooltip,
   Legend,
   ChartData,
   ChartOptions,
+  RadialLinearScale,
+  Filler,
+  LineElement,
+  PointElement,
 } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
+import { Radar } from 'react-chartjs-2';
 import { IDay } from '../types/interfaces';
 import { Mood } from '@prisma/client';
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+);
 
-const MoodChart: React.FC<{ days: IDay[] }> = ({ days }) => {
-  const [chartData, setChartData] = useState<ChartData<'doughnut'>>();
-  const [chartOptions, setChartOptions] = useState<ChartOptions<'doughnut'>>();
-
+const RadarChart: React.FC<{ days: IDay[] }> = ({ days }) => {
+  const [radarOptions, setRadarOptions] = useState<ChartOptions<'radar'>>();
+  const [radarData, setRadarData] = useState<ChartData<'radar'>>();
   useEffect(() => {
     if (days.length > 0) {
       const currentMonthMoods: Mood[] = days
@@ -41,7 +50,8 @@ const MoodChart: React.FC<{ days: IDay[] }> = ({ days }) => {
       const labels = formattedData.map((data) => data.mood);
       const data = formattedData.map((data) => data.value);
       const colors = formattedData.map((data) => data.color);
-      const options: ChartOptions<'doughnut'> = {
+
+      const rOptions: ChartOptions<'radar'> = {
         responsive: true,
         plugins: {
           legend: {
@@ -57,29 +67,28 @@ const MoodChart: React.FC<{ days: IDay[] }> = ({ days }) => {
           },
         },
       };
-      setChartOptions(options);
-      const chartData: ChartData<'doughnut'> = {
+      const rData: ChartData<'radar'> = {
         labels: labels,
         datasets: [
           {
-            label: 'Days',
+            label: '# of Days',
             data: data,
-            backgroundColor: colors,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
             borderWidth: 1,
-            hoverOffset: 4,
           },
         ],
       };
-
-      setChartData(chartData);
+      setRadarOptions(rOptions);
+      setRadarData(rData);
     }
   }, [days]);
 
-  return chartData && chartOptions ? (
+  return radarData && radarOptions ? (
     <div className='w-full max-w-md'>
-      <Doughnut data={chartData} options={chartOptions} />
+      <Radar data={radarData} options={radarOptions} />
     </div>
   ) : null;
 };
 
-export default MoodChart;
+export default RadarChart;
