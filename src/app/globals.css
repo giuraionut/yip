@@ -16,7 +16,10 @@
   }
 }
 
+html,
 body {
+  padding: 0;
+  margin: 0;
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
       to bottom,
@@ -25,7 +28,9 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
-
+* {
+  box-sizing: border-box;
+}
 @layer utilities {
   .text-balance {
     text-wrap: balance;

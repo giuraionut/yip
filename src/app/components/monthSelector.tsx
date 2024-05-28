@@ -22,9 +22,9 @@ const months: IMonth[] = [
   { title: 'December', icon: <HeartOutlined />, color: 'green', index: 11 },
 ];
 
-export const currentMonthName = (index:number) =>{
+export const currentMonthName = (index: number) => {
   return months[index].title;
-} 
+};
 const MonthSelector: React.FC<{
   selectedMonth: number;
   setSelectedMonth: (month: number) => void;
@@ -36,8 +36,8 @@ const MonthSelector: React.FC<{
         <Card
           key={month.title}
           className={`${
-            selectedMonth === month.index ? 'bg-blue-400 ' : 'bg-slate-700'
-          } text-white text-center border-none hover:cursor-pointer hover:brightness-125`}
+            selectedMonth === month.index ? 'bg-blue-400 ' : ''
+          }text-center border-none hover:cursor-pointer`}
           onClick={() => setSelectedMonth(month.index)}
         >
           {month.title}

@@ -251,7 +251,7 @@ const MoodModal: React.FC<{
         // Prevent default close behavior
       }}
       onClick={() => handleCreateDayMood(mood)}
-      className='hover:cursor-pointer font-bold hover:brightness-125'
+      className='hover:cursor-pointer hover:brightness-125'
     >
       {mood.name}
     </Tag>

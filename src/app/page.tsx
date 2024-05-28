@@ -52,11 +52,6 @@ const Home: React.FC = () => {
       label: 'Radar View',
       children: <RadarChart days={days} />,
     },
-    {
-      key: '3',
-      label: 'Tab 3',
-      children: 'Content of Tab Pane 3',
-    },
   ];
 
   useEffect(() => {
@@ -88,7 +83,7 @@ const Home: React.FC = () => {
   }, [selectedMonth, currentYear]);
 
   return daysLoading ? (
-    <div className='bg-slate-500 h-screen'>
+    <div>
       <div className='grid h-screen place-items-center'>
         <Spin />
       </div>
@@ -110,13 +105,11 @@ const Home: React.FC = () => {
         moodsLoading={moodsLoading}
       />
 
-      <div className='bg-slate-500 h-screen p-2'>
+      <div>
         <NavBar />
-        <div className='grid grid-cols-2 gap-2 p-5'>
+        <div className='grid grid-cols-2 gap-2'>
           <div className='flex flex-col gap-3 p-5'>
-            <div className='text-white font-bold bg-slate-700 p-2 rounded-md'>
-              {currentYear}
-            </div>
+            <div className='font-bold p-2 rounded-md'>{currentYear}</div>
             <MonthSelector
               selectedMonth={selectedMonth}
               setSelectedMonth={setSelectedMonth}
@@ -133,7 +126,7 @@ const Home: React.FC = () => {
           </div>
 
           <div className='flex flex-col gap-3 p-5'>
-            <div className='text-white font-bold bg-slate-700 p-2 rounded-md'>
+            <div className='font-bold p-2 rounded-md'>
               {currentMonthName(selectedMonth)}
             </div>
             <DayCards
