@@ -10,10 +10,15 @@ import {
   Input,
   ColorPicker,
   notification,
+  Popconfirm,
 } from 'antd';
 import { Mood, DayMood } from '@prisma/client';
 import { IDay, MyDayMood } from '../types/interfaces';
-import { PlusOutlined, RadiusUprightOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  CloseOutlined,
+  RadiusUprightOutlined,
+} from '@ant-design/icons';
 import type { NotificationArgsProps } from 'antd';
 import { currentMonthName } from './monthSelector';
 
@@ -54,7 +59,7 @@ const MoodModal: React.FC<{
   const [colorPickerValue, setColorPickerValue] = useState('rgb(251 146 150)');
   const moodNotification = (
     placement: NotificationPlacement,
-    description: string,
+    description: React.ReactNode,
     message: string
   ) => {
     api.info({
@@ -82,7 +87,15 @@ const MoodModal: React.FC<{
       setCreateDayMoodLoading(false);
       moodNotification(
         'topRight',
-        `Today, you set your mood as ${newDayMood.mood.name}`,
+        <>
+          <span>Today, you set your mood as: </span>
+          <Tag
+            color={newDayMood.mood.color ? newDayMood.mood.color : ''}
+            key={newDayMood.mood.id}
+          >
+            {newDayMood.mood.name}
+          </Tag>
+        </>,
         'Mood created succesfully!'
       );
     } catch (error) {
@@ -138,9 +151,23 @@ const MoodModal: React.FC<{
         body: JSON.stringify({ id: mood.id }),
       });
       if (!response.ok) {
-        throw new Error('Failed to delete mood');
+        const errorData = await response.json();
+        moodNotification(
+          'topRight',
+          <>
+            <span>Deleting the mood tag </span>
+            <Tag color={mood.color ? mood.color : ''} key={mood.id}>
+              {mood.name}
+            </Tag>
+            <span>failed. Reason: ${errorData.message}</span>
+          </>,
+          'Deleting mood tag failed'
+        );
+        throw new Error(errorData.message || 'Failed to delete mood');
       }
       console.log('Mood deleted successfully');
+      const newMoods = moods.filter((m) => m.id !== mood.id);
+      setMoods(newMoods);
       moodNotification(
         'topRight',
         `The mood tag "${mood.name}" was deleted with success!`,
@@ -148,11 +175,6 @@ const MoodModal: React.FC<{
       );
     } catch (error) {
       console.error('Error deleting mood:', error);
-      moodNotification(
-        'topRight',
-        `For some reason, deleting the mood tag "${mood.name}" failed...`,
-        'Deleting mood tag failed'
-      );
     }
   };
   const handleCreateDayMood = async (mood: Mood) => {
@@ -175,10 +197,7 @@ const MoodModal: React.FC<{
   }, [inputVisible]);
 
   const handleClose = async (removedMood: Mood) => {
-    const newMoods = moods.filter((mood) => mood.id !== removedMood.id);
-    console.log(newMoods);
     await deleteMood(removedMood);
-    setMoods(newMoods);
   };
 
   const showInput = () => {
@@ -205,9 +224,31 @@ const MoodModal: React.FC<{
       color={mood.color ? mood.color : ''}
       key={mood.id}
       closable
+      closeIcon={
+        <Popconfirm
+          title='Are you sure to delete this mood?'
+          onConfirm={(e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            handleClose(mood);
+          }}
+          onCancel={(e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+          okText='Yes'
+          cancelText='No'
+        >
+          <CloseOutlined onClick={(e) => e.stopPropagation()} />
+        </Popconfirm>
+      }
       onClose={(e) => {
         e.preventDefault();
-        handleClose(mood);
+        // Prevent default close behavior
       }}
       onClick={() => handleCreateDayMood(mood)}
       className='hover:cursor-pointer font-bold hover:brightness-125'

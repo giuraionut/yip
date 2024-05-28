@@ -38,6 +38,15 @@ export async function DELETE(req: Request) {
         if (!id) {
             return new NextResponse("Bad Request", { status: 400 });
         }
+
+        const relatedDayMoods = await prisma.dayMood.findMany({
+            where: {
+                moodId: Number(id),
+            },
+        });
+        if (relatedDayMoods.length > 0) {
+            return new NextResponse(JSON.stringify({ message: "Mood it is used by one more days" }), { status: 400 })
+        }
         await prisma.mood.delete({ where: { id: Number(id) } });
         return new NextResponse("Mood deleted successfully", { status: 200 });
     } catch (error) {
