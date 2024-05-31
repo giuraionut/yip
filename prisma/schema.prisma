@@ -26,3 +26,20 @@ model DayMood {
 
   @@id([day, month, year])
 }
+
+model Event {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique
+  color    String     @unique
+  DayEvent DayEvent[]
+}
+
+model DayEvent {
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  day     Int
+  month   Int
+  year    Int
+
+  @@id([day, month, year])
+}

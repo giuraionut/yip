@@ -6,24 +6,30 @@ import {
   Button,
   Spin,
   InputRef,
-  theme,
   Input,
   ColorPicker,
   notification,
   Popconfirm,
+  Space,
+  Select,
+  theme,
+  message,
 } from 'antd';
+import * as Icons from '@ant-design/icons';
 import { Mood, DayMood } from '@prisma/client';
 import { IDay, MyDayMood } from '../types/interfaces';
 import {
   PlusOutlined,
   CloseOutlined,
   RadiusUprightOutlined,
+  SmileOutlined,
 } from '@ant-design/icons';
-import type { NotificationArgsProps } from 'antd';
+import type { NotificationArgsProps, PopconfirmProps } from 'antd';
 import { currentMonthName } from './monthSelector';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 
 type NotificationPlacement = NotificationArgsProps['placement'];
-const MoodModal: React.FC<{
+const DayModal: React.FC<{
   isModalOpen: boolean;
   handleCancel: () => void;
   handleOk: () => void;
@@ -312,6 +318,22 @@ const MoodModal: React.FC<{
 
     return `rgb(${r} ${g} ${b})`;
   };
+  const handleEventInputChange = (value: string) => {
+    console.log(`selected ${value}`);
+  };
+  type IconComponentType = {
+    [key: string]: React.ComponentType;
+  };
+
+  const confirm: PopconfirmProps['onConfirm'] = (e) => {
+    console.log(e);
+    message.success('Click on Yes');
+  };
+
+  const cancel: PopconfirmProps['onCancel'] = (e) => {
+    console.log(e);
+    message.error('Click on No');
+  };
 
   return (
     <>
@@ -339,24 +361,57 @@ const MoodModal: React.FC<{
               ref={inputRef}
               type='text'
               size='small'
-              style={{ width: 78 }}
+              style={{ width: 100 }}
               value={inputValue}
               onChange={handleInputChange}
               onBlur={handleInputConfirm}
               onPressEnter={handleInputConfirm}
+              placeholder='Mood name'
             />
           ) : (
-            <Flex gap='10px' wrap>
-              <ColorPicker
-                size='small'
-                defaultValue={colorPickerValue}
-                onChange={(_, hex) => {
-                  setColorPickerValue(hexToRgb(hex));
-                }}
-              />
-              <Tag onClick={showInput} color={colorPickerValue}>
-                <PlusOutlined /> New Tag
-              </Tag>
+            <Flex gap='10px' wrap vertical>
+              <Flex gap='10px' wrap>
+                <ColorPicker
+                  size='small'
+                  defaultValue={colorPickerValue}
+                  onChange={(_, hex) => {
+                    setColorPickerValue(hexToRgb(hex));
+                  }}
+                />
+                <Tag onClick={showInput} color={colorPickerValue}>
+                  <PlusOutlined /> New Tag
+                </Tag>
+              </Flex>
+              <Flex gap='10px' wrap>
+                <Space style={{ width: '100%' }}>
+                  <Input
+                    addonAfter={
+                      <Popconfirm
+                        title='Pick an emoji'
+                        description={<EmojiPicker theme={Theme.DARK} />}
+                        onConfirm={confirm}
+                        onCancel={cancel}
+                        okText=''
+                        cancelText=''
+                        icon=''
+                      >
+                        <SmileOutlined />
+                      </Popconfirm>
+                    }
+                    placeholder='What happened today?'
+                  />
+                </Space>
+              </Flex>
+              <Popconfirm
+                title='Delete the task'
+                description='Are you sure to delete this task?'
+                onConfirm={confirm}
+                onCancel={cancel}
+                okText='Yes'
+                cancelText='No'
+              >
+                <Button danger>Delete</Button>
+              </Popconfirm>
             </Flex>
           )}
         </Flex>
@@ -365,4 +420,4 @@ const MoodModal: React.FC<{
   );
 };
 
-export default MoodModal;
+export default DayModal;

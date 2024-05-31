@@ -5,7 +5,6 @@ import { Mood } from '@prisma/client';
 import { IDay } from './types/interfaces';
 import MonthSelector, { currentMonthName } from './components/monthSelector';
 import DayCards from './components/dayCards';
-import MoodModal from './components/moodModal';
 import NavBar from './components/navBar';
 import moodService from './services/moodService';
 import dayMoodService from './services/dayMoodService';
@@ -14,6 +13,7 @@ import type { TabsProps } from 'antd';
 import Link from 'next/link';
 import DoughnutChart from './components/doughnutChart';
 import RadarChart from './components/radarChart';
+import DayModal from './components/dayModal';
 const Home: React.FC = () => {
   const currentDate = new Date();
   const [currentDay, currentMonth, currentYear] = [
@@ -90,7 +90,7 @@ const Home: React.FC = () => {
     </div>
   ) : (
     <>
-      <MoodModal
+      <DayModal
         isModalOpen={isDayModalOpen}
         handleCancel={() => setIsDayModalOpen(false)}
         handleOk={() => setIsDayModalOpen(false)}
