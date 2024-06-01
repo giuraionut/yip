@@ -30,7 +30,6 @@ model DayMood {
 model Event {
   id       Int        @id @default(autoincrement())
   name     String     @unique
-  color    String     @unique
   DayEvent DayEvent[]
 }
 

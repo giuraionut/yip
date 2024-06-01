@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Spin } from 'antd';
-import { Mood } from '@prisma/client';
+import { Event, Mood } from '@prisma/client';
 import { IDay } from './types/interfaces';
 import MonthSelector, { currentMonthName } from './components/monthSelector';
 import DayCards from './components/dayCards';
@@ -14,6 +14,7 @@ import Link from 'next/link';
 import DoughnutChart from './components/doughnutChart';
 import RadarChart from './components/radarChart';
 import DayModal from './components/dayModal';
+import eventService from './services/eventService';
 const Home: React.FC = () => {
   const currentDate = new Date();
   const [currentDay, currentMonth, currentYear] = [
@@ -27,14 +28,17 @@ const Home: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState(currentDay);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [moods, setMoods] = useState<Mood[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
 
   const [daysLoading, setDaysLoading] = useState(true);
   const [moodsLoading, setMoodsLoading] = useState(true);
+  const [eventsLoading, setEventsLoading] = useState(true);
   const [createDayMoodLoading, setCreateDayMoodLoading] = useState(false);
+  const [createDayEventLoading, setCreateDayEventLoading] = useState(false);
 
   const { fetchMoods } = moodService();
   const { fetchDayMoods } = dayMoodService();
-
+  const { fetchEvents } = eventService();
   const tabsExtraAction = (
     <Link href='https://www.google.ro'>View more statistics</Link>
   );
@@ -67,7 +71,20 @@ const Home: React.FC = () => {
     };
     loadMoods();
   }, []);
-
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const events = await fetchEvents();
+        setEvents(events);
+        setEventsLoading(false);
+      }
+      catch (error) { }
+      finally {
+        setEventsLoading(false);
+      }
+    }
+    loadEvents();
+  }, [])
   useEffect(() => {
     const loadDayMoods = async () => {
       try {
@@ -100,9 +117,13 @@ const Home: React.FC = () => {
         currentYear={currentYear}
         setDays={setDays}
         setMoods={setMoods}
+        setEvents={setEvents}
         setCreateDayMoodLoading={setCreateDayMoodLoading}
+        setCreateDayEventLoading={setCreateDayEventLoading}
         createDayMoodLoading={createDayMoodLoading}
+        createDayEventLoading={createDayEventLoading}
         moodsLoading={moodsLoading}
+        events={events}
       />
 
       <div>

@@ -1,5 +1,5 @@
 
-import { DayMood, Mood } from '@prisma/client';
+import { DayEvent, DayMood, Event, Mood } from '@prisma/client';
 
 export interface IDay {
     title: string;
@@ -10,7 +10,9 @@ export interface IDay {
 export interface MyDayMood extends DayMood {
     mood: Mood;
 }
-
+export interface MyDayEvent extends DayEvent {
+    event: Event
+}
 export interface IMonth {
     title: string;
     icon: JSX.Element; // Updated 'icon' type to JSX.Element

@@ -1,58 +1,61 @@
-import { PrismaClient } from '@prisma/client'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../prisma/client';
+import log from '../../logger';
 
-export async function GET(req: any, res: any) {
+const disconnectPrisma = async () => {
+  try {
+    await prisma.$disconnect();
+  } catch (error) {
+    log.error("Error disconnecting Prisma:", error);
+  }
+};
 
-    try {
-        const moods = await prisma.mood.findMany()
-        return NextResponse.json(moods);
-    } catch (error) {
-        console.error("Error fetching moods:", error)
-        return new NextResponse("Internal Server Error", { status: 500 })
-    } finally {
-        await prisma.$disconnect()
-    }
+export async function GET(req: NextRequest) {
+  try {
+    const moods = await prisma.mood.findMany();
+    return NextResponse.json(moods);
+  } catch (error) {
+    log.error("Error fetching moods:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  } finally {
+    await disconnectPrisma();
+  }
 }
 
-export async function POST(req: Request) {
-    try {
-        const data = await req.json();
-        console.log(data);
-        const mood = await prisma.mood.create({ data });
-        return NextResponse.json(mood);
-    }
-    catch (error) {
-        console.error("Error creating mood:", error)
-        return new NextResponse("Internal Server Error", { status: 500 })
-    }
-    finally {
-        await prisma.$disconnect()
-    }
+export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json();
+    log.info("Creating mood with data:", data);
+    const mood = await prisma.mood.create({ data });
+    return NextResponse.json(mood);
+  } catch (error) {
+    log.error("Error creating mood:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  } finally {
+    await disconnectPrisma();
+  }
 }
 
-
-export async function DELETE(req: Request) {
-    try {
-        const { id } = await req.json();
-        if (!id) {
-            return new NextResponse("Bad Request", { status: 400 });
-        }
-
-        const relatedDayMoods = await prisma.dayMood.findMany({
-            where: {
-                moodId: Number(id),
-            },
-        });
-        if (relatedDayMoods.length > 0) {
-            return new NextResponse(JSON.stringify({ message: "Mood it is used by one more days" }), { status: 400 })
-        }
-        await prisma.mood.delete({ where: { id: Number(id) } });
-        return new NextResponse("Mood deleted successfully", { status: 200 });
-    } catch (error) {
-        console.error("Error deleting mood:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
-    } finally {
-        await prisma.$disconnect();
+export async function DELETE(req: NextRequest) {
+  try {
+    const { id } = await req.json();
+    if (!id) {
+      return new NextResponse("Bad Request", { status: 400 });
     }
+
+    const relatedDayMoods = await prisma.dayMood.findMany({
+      where: { moodId: Number(id) },
+    });
+    if (relatedDayMoods.length > 0) {
+      return new NextResponse(JSON.stringify({ message: "Mood is used by one or more days" }), { status: 400 });
+    }
+
+    await prisma.mood.delete({ where: { id: Number(id) } });
+    return new NextResponse("Mood deleted successfully", { status: 200 });
+  } catch (error) {
+    log.error("Error deleting mood:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  } finally {
+    await disconnectPrisma();
+  }
 }
