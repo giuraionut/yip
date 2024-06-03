@@ -504,11 +504,10 @@ const DayModal: React.FC<{
                       onPopupClick={(e) => e.stopPropagation()}
                       description={
                         <div onMouseDown={(e) => e.stopPropagation()}>
-                          {' '}
-                          // Add this to the parent div of EmojiPicker
                           <EmojiPicker
                             theme={Theme.DARK}
                             autoFocusSearch={true}
+                            lazyLoadEmojis={true}
                           />
                         </div>
                       }
