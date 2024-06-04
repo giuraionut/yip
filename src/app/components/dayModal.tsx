@@ -17,10 +17,15 @@ import {
 } from 'antd';
 import { Mood, DayMood, Event, DayEvent } from '@prisma/client';
 import { IDay, MyDayEvent, MyDayMood } from '../types/interfaces';
-import { PlusOutlined, CloseOutlined, SmileOutlined } from '@ant-design/icons';
+import {
+  MinusOutlined,
+  PlusOutlined,
+  CloseOutlined,
+  SmileOutlined,
+} from '@ant-design/icons';
 import type { PopconfirmProps } from 'antd';
 import { currentMonthName } from './monthSelector';
-import EmojiPicker, { Theme } from 'emoji-picker-react';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { moodNotification } from './notifications';
 import { hexToRgb } from '../utils';
 
@@ -62,9 +67,10 @@ const DayModal: React.FC<{
   const [api, contextHolder] = notification.useNotification();
   const [inputVisible, setInputVisible] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<InputRef>(null);
   const [colorPickerValue, setColorPickerValue] = useState('rgb(251 146 150)');
+  const [emojiPickerEmoji, setEmojiPickerEmoji] = useState<EmojiClickData>();
   const [eventOptions, setEventOptions] = useState<{ value: string }[]>([]);
+  const inputRef = useRef<InputRef>(null);
 
   const createDayMood = async (data: DayMood) => {
     try {
@@ -197,7 +203,7 @@ const DayModal: React.FC<{
             <Tag color={mood.color ? mood.color : ''} key={mood.id}>
               {mood.name}
             </Tag>
-            <span>failed. Reason: ${errorData.message}</span>
+            <span>failed. Reason: {errorData.message}</span>
           </>,
           'Deleting mood tag failed',
           api
@@ -252,7 +258,7 @@ const DayModal: React.FC<{
       } else {
         moodNotification(
           'topRight',
-          "For some reason the mood can't be deleteMood, try again later...",
+          "For some reason the mood can't be deleted, try again later...",
           'Deleting mood failed',
           api
         );
@@ -401,7 +407,7 @@ const DayModal: React.FC<{
       .filter((item) =>
         item.name.toLowerCase().includes(searchText.toLowerCase())
       )
-      .map((item) => ({ value: item.name }));
+      .map((item) => renderItem(item.name));
   };
   const cancel: PopconfirmProps['onCancel'] = (e) => {
     console.log(e);
@@ -429,6 +435,28 @@ const DayModal: React.FC<{
     }
     // handleCreateDayEvent(event);
   };
+
+  const renderItem = (title: string) => ({
+    value: title,
+    label: (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        {title}
+        <span>
+          <MinusOutlined
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log('minus');
+            }}
+          />
+        </span>
+      </div>
+    ),
+  });
 
   return (
     <>
@@ -508,6 +536,7 @@ const DayModal: React.FC<{
                             theme={Theme.DARK}
                             autoFocusSearch={true}
                             lazyLoadEmojis={true}
+                            onEmojiClick={(emoji) => setEmojiPickerEmoji(emoji)}
                           />
                         </div>
                       }
@@ -517,7 +546,11 @@ const DayModal: React.FC<{
                       cancelText=''
                       icon=''
                     >
-                      <SmileOutlined />
+                      {emojiPickerEmoji ? (
+                        emojiPickerEmoji.emoji
+                      ) : (
+                        <SmileOutlined />
+                      )}
                     </Popconfirm>
                   }
                 />
