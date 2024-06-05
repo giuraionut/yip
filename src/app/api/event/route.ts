@@ -22,19 +22,40 @@ export async function GET(req: NextRequest) {
   }
 }
 
+
 export async function POST(req: NextRequest) {
   try {
+
     const data = await req.json();
     log.info("Creating event with data:", data);
-    const event = await prisma.event.create({ data });
+    const event = await prisma.event.upsert({
+      where: { name: data.name },
+      update: { ...data },
+      create: { ...data },
+    });
+
     return NextResponse.json(event);
   } catch (error) {
-    log.error("Error creating event:", error);
+    log.error("Error creating day event:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   } finally {
     await disconnectPrisma();
   }
 }
+
+// export async function POST(req: NextRequest) {
+//   try {
+//     const data = await req.json();
+//     log.info("Creating event with data:", data);
+//     const event = await prisma.event.create({ data });
+//     return NextResponse.json(event);
+//   } catch (error) {
+//     log.error("Error creating event:", error);
+//     return new NextResponse("Internal Server Error", { status: 500 });
+//   } finally {
+//     await disconnectPrisma();
+//   }
+// }
 
 export async function DELETE(req: NextRequest) {
   try {

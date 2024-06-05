@@ -1,6 +1,6 @@
 import { NotificationInstance, NotificationPlacement } from 'antd/es/notification/interface';
 import React from 'react'
-export const moodNotification = (
+export const dayChangeNotification = (
     placement: NotificationPlacement,
     description: React.ReactNode,
     message: string,
