@@ -12,7 +12,22 @@ const disconnectPrisma = async () => {
 
 export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const monthParam = searchParams.get('month');
+    const yearParam = searchParams.get('year');
+
+    if (monthParam === null || yearParam === null) {
+      return new NextResponse("Bad Request: Missing month or year parameter", { status: 400 });
+    }
+
+    const month = parseInt(monthParam, 10);
+    const year = parseInt(yearParam, 10);
+
+    if (isNaN(month) || isNaN(year)) {
+      return new NextResponse("Bad Request: Invalid month or year parameter", { status: 400 });
+    }
     const events = await prisma.dayEvent.findMany({
+      where: { month: month, year: year },
       include: { event: true },
     });
     return NextResponse.json(events);

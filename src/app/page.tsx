@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Spin } from 'antd';
-import { Event, Mood } from '@prisma/client';
+import { DayEvent, DayMood, Event, Mood } from '@prisma/client';
 import { IDay } from './types/interfaces';
 import MonthSelector, { currentMonthName } from './components/monthSelector';
 import DayCards from './components/dayCards';
@@ -15,6 +15,8 @@ import DoughnutChart from './components/doughnutChart';
 import RadarChart from './components/radarChart';
 import DayModal from './components/dayModal';
 import eventService from './services/eventService';
+import dayEventService from './services/dayEventService';
+import renderDays from './components/renderDays';
 const Home: React.FC = () => {
   const currentDate = new Date();
   const [currentDay, currentMonth, currentYear] = [
@@ -39,6 +41,8 @@ const Home: React.FC = () => {
   const { fetchMoods } = moodService();
   const { fetchDayMoods } = dayMoodService();
   const { fetchEvents } = eventService();
+  const { fetchDayEvents } = dayEventService();
+  const { renderMonthDays } = renderDays();
   const tabsExtraAction = (
     <Link href='https://www.google.ro'>View more statistics</Link>
   );
@@ -77,26 +81,41 @@ const Home: React.FC = () => {
         const events = await fetchEvents();
         setEvents(events);
         setEventsLoading(false);
-      }
-      catch (error) { }
-      finally {
-        setEventsLoading(false);
-      }
-    }
-    loadEvents();
-  }, [])
-  useEffect(() => {
-    const loadDayMoods = async () => {
-      try {
-        const dayMoods = await fetchDayMoods(selectedMonth, currentYear);
-        setDays(dayMoods);
-        setDaysLoading(false);
       } catch (error) {
       } finally {
-        setDaysLoading(false);
+        setEventsLoading(false);
       }
     };
-    loadDayMoods();
+    loadEvents();
+  }, []);
+
+  useEffect(() => {
+    const loadDays = async () => {
+      const dayMoods = await fetchDayMoods(selectedMonth, currentYear);
+      const dayEvents = await fetchDayEvents(selectedMonth, currentYear);
+      const daysGrid = renderMonthDays(selectedMonth, currentYear);
+
+      const updatedDaysGrid = daysGrid.map((week) =>
+        week.map((day) => {
+          if (!day) return null;
+          const matchDayMood = dayMoods.find(
+            (dayMood: DayMood) => dayMood.day === day.index
+          );
+          const matchDayEvent = dayEvents.find(
+            (dayEvent: DayEvent) => dayEvent.day === day.index
+          );
+          return {
+            ...day,
+            ...(matchDayMood && { mood: matchDayMood.mood }),
+            ...(matchDayEvent && { event: matchDayEvent.event }),
+          };
+        })
+      );
+
+      setDays(updatedDaysGrid.flat()); // Flatten the 2D array into a 1D array
+      setDaysLoading(false);
+    };
+    loadDays();
   }, [selectedMonth, currentYear]);
 
   return daysLoading ? (

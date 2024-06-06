@@ -6,6 +6,7 @@ export interface IDay {
     index: number;
     currentDay?: boolean;
     mood?: Mood;
+    event?: Event;
 }
 export interface MyDayMood extends DayMood {
     mood: Mood;
@@ -15,7 +16,7 @@ export interface MyDayEvent extends DayEvent {
 }
 export interface IMonth {
     title: string;
-    icon: JSX.Element; // Updated 'icon' type to JSX.Element
+    icon: string; 
     color: string;
     index: number;
     currentMonth?: boolean;

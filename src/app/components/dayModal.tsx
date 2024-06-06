@@ -84,9 +84,10 @@ const DayModal: React.FC<{
       const newDayMood: MyDayMood = await response.json();
       setDays((prevDays) =>
         prevDays.map((day) => {
-          return day.index === selectedDay
-            ? { ...day, mood: newDayMood.mood }
-            : day;
+          if (day && day.index === selectedDay) {
+            return { ...day, mood: newDayMood.mood };
+          }
+          return day;
         })
       );
       setCreateDayMoodLoading(false);
@@ -126,9 +127,10 @@ const DayModal: React.FC<{
       const newDayEvent: MyDayEvent = await response.json();
       setDays((prevDays) =>
         prevDays.map((day) => {
-          return day.index === selectedDay
-            ? { ...day, event: newDayEvent.event }
-            : day;
+          if (day && day.index === selectedDay) {
+            return { ...day, event: newDayEvent.event };
+          }
+          return day;
         })
       );
       setCreateDayMoodLoading(false);
@@ -241,9 +243,10 @@ const DayModal: React.FC<{
       if (response.ok) {
         setDays((prevDays) =>
           prevDays.map((day) => {
-            return day.index === selectedDay
-              ? { ...day, event: undefined }
-              : day;
+            if (day && day.index === selectedDay) {
+              return { ...day, event: undefined };
+            }
+            return day;
           })
         );
         dayChangeNotification(
