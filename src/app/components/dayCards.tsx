@@ -37,7 +37,7 @@ const DayCards: React.FC<{
     <>
       <div className='grid grid-cols-7 gap-2'>
         {daysName.map((day) => (
-          <Card className={`text-white text-center border-none`}>
+          <Card key={day} className={`text-white text-center border-none`}>
             <Meta title={day} description='' />
           </Card>
         ))}

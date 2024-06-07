@@ -28,6 +28,10 @@ import { currentMonthName } from './monthSelector';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { dayChangeNotification } from './notifications';
 import { hexToRgb } from '../utils';
+import dayMoodService from '../services/dayMoodService';
+import dayEventService from '../services/dayEventService';
+import eventService from '../services/eventService';
+import moodService from '../services/moodService';
 
 const DayModal: React.FC<{
   isModalOpen: boolean;
@@ -73,86 +77,10 @@ const DayModal: React.FC<{
   const [selectedEvent, setSelectedEvent] = useState<Event>();
   const inputRef = useRef<InputRef>(null);
 
-  const createDayMood = async (data: DayMood) => {
-    try {
-      const response = await fetch('/api/daymood', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to create day mood');
-      const newDayMood: MyDayMood = await response.json();
-      setDays((prevDays) =>
-        prevDays.map((day) => {
-          if (day && day.index === selectedDay) {
-            return { ...day, mood: newDayMood.mood };
-          }
-          return day;
-        })
-      );
-      setCreateDayMoodLoading(false);
-      dayChangeNotification(
-        'topRight',
-        <>
-          <span>Today, you set your mood as: </span>
-          <Tag
-            color={newDayMood.mood.color ? newDayMood.mood.color : ''}
-            key={newDayMood.mood.id}
-          >
-            {newDayMood.mood.name}
-          </Tag>
-        </>,
-        'Mood created succesfully!',
-        api
-      );
-    } catch (error) {
-      console.error('Error creating mood:', error);
-      dayChangeNotification(
-        'topRight',
-        "For some reason the mood can't be created, try again later...",
-        'Creating mood failed',
-        api
-      );
-    }
-  };
-
-  const createDayEvent = async (data: DayEvent) => {
-    try {
-      const response = await fetch('/api/dayevent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to create day mood');
-      const newDayEvent: MyDayEvent = await response.json();
-      setDays((prevDays) =>
-        prevDays.map((day) => {
-          if (day && day.index === selectedDay) {
-            return { ...day, event: newDayEvent.event };
-          }
-          return day;
-        })
-      );
-      setCreateDayMoodLoading(false);
-      dayChangeNotification(
-        'topRight',
-        <>
-          <span>Today, you set your mood as: </span>
-          {newDayEvent.event.name}
-        </>,
-        'Event created succesfully!',
-        api
-      );
-    } catch (error) {
-      console.error('Error creating event:', error);
-      dayChangeNotification(
-        'topRight',
-        "For some reason the event can't be created, try again later...",
-        'Creating event failed',
-        api
-      );
-    }
-  };
+  const { createDayMood, deleteDayMood } = dayMoodService();
+  const { createDayEvent, deleteDayEvent } = dayEventService();
+  const { createEvent } = eventService();
+  const { deleteMood } = moodService();
   const createNewMoodTag = async (moodName: string) => {
     try {
       const response = await fetch('/api/mood', {
@@ -188,166 +116,59 @@ const DayModal: React.FC<{
     }
   };
 
-  const deleteMoodTag = async (mood: Mood) => {
+  const handleDeleteDayEvent = async () => {
     try {
-      const response = await fetch('/api/mood', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: mood.id }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        dayChangeNotification(
-          'topRight',
-          <>
-            <span>Deleting the mood tag </span>
-            <Tag color={mood.color ? mood.color : ''} key={mood.id}>
-              {mood.name}
-            </Tag>
-            <span>failed. Reason: {errorData.message}</span>
-          </>,
-          'Deleting mood tag failed',
-          api
-        );
-        throw new Error(errorData.message || 'Failed to delete mood');
-      }
+      await deleteDayEvent(selectedDay, selectedMonth, currentYear);
+      setDays((prevDays) =>
+        prevDays.map((day) =>
+          day && day.index === selectedDay ? { ...day, event: undefined } : day
+        )
+      );
+      dayChangeNotification(
+        'topRight',
+        `Event for ${selectedDay} of ${currentMonthName(
+          selectedMonth
+        )} was reseted successfully!`,
+        'Event deleted succesfully',
+        api
+      );
       console.log('Mood deleted successfully');
-      const newMoods = moods.filter((m) => m.id !== mood.id);
-      setMoods(newMoods);
+    } catch (error) {
       dayChangeNotification(
         'topRight',
-        `The mood tag "${mood.name}" was deleted with success!`,
-        'Mood tag deleted successfully!',
+        "For some reason the event can't be deleted, try again later...",
+        'Deleting event failed',
         api
       );
-    } catch (error) {
-      console.error('Error deleting mood:', error);
-    }
-  };
-  const resetDayEvent = async () => {
-    try {
-      const response = await fetch('/api/dayevent', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          day: selectedDay,
-          month: selectedMonth,
-          year: currentYear,
-        }),
-      });
-
-      if (response.ok) {
-        setDays((prevDays) =>
-          prevDays.map((day) => {
-            if (day && day.index === selectedDay) {
-              return { ...day, event: undefined };
-            }
-            return day;
-          })
-        );
-        dayChangeNotification(
-          'topRight',
-          `Event for ${selectedDay} of ${currentMonthName(
-            selectedMonth
-          )} was reseted successfully!`,
-          'Event deleted succesfully',
-          api
-        );
-        console.log('Event deleted successfully');
-      } else {
-        dayChangeNotification(
-          'topRight',
-          "For some reason the event can't be deleted, try again later...",
-          'Deleting event failed',
-          api
-        );
-        console.error('Failed to delete event');
-      }
-    } catch (error) {
-      console.error('Error deleting event:', error);
-    }
-  };
-  const resetDayMood = async () => {
-    try {
-      const response = await fetch('/api/daymood', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          day: selectedDay,
-          month: selectedMonth,
-          year: currentYear,
-        }),
-      });
-
-      if (response.ok) {
-        setDays((prevDays) =>
-          prevDays.map((day) => {
-            return day.index === selectedDay
-              ? { ...day, mood: undefined }
-              : day;
-          })
-        );
-        dayChangeNotification(
-          'topRight',
-          `Mood for ${selectedDay} of ${currentMonthName(
-            selectedMonth
-          )} was reseted successfully!`,
-          'Mood deleted succesfully',
-          api
-        );
-        console.log('Mood deleted successfully');
-      } else {
-        dayChangeNotification(
-          'topRight',
-          "For some reason the mood can't be deleted, try again later...",
-          'Deleting mood failed',
-          api
-        );
-        console.error('Failed to delete mood');
-      }
-    } catch (error) {
-      console.error('Error deleting mood:', error);
+      console.error('Failed to delete mood');
     }
   };
 
-  const createEvent = async (event: Event) => {
+  const handleDeleteDayMood = async () => {
     try {
-      const response = await fetch('/api/event', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json', // Set the content type to JSON
-        },
-        body: JSON.stringify({ name: event.name, symbol: event.symbol }),
-      });
-      if (response.ok) {
-        const data: Event = await response.json();
-        console.log(data);
-        dayChangeNotification(
-          'topRight',
-          `You created a new event: ${event.name}`,
-          'Event created successfully',
-          api
-        );
-        return data;
-      } else {
-        throw new Error('Failed to fetch events');
-      }
-    } catch (error) {
-      console.log(error);
+      await deleteDayMood(selectedDay, selectedMonth, currentYear);
+      setDays((prevDays) =>
+        prevDays.map((day) =>
+          day && day.index === selectedDay ? { ...day, mood: undefined } : day
+        )
+      );
       dayChangeNotification(
         'topRight',
-        `For some reason, creating ${event.name} event failed...`,
-        'Creating event failed',
+        `Mood for ${selectedDay} of ${currentMonthName(
+          selectedMonth
+        )} was reseted successfully!`,
+        'Mood deleted succesfully',
         api
       );
-      return undefined;
+      console.log('Mood deleted successfully');
+    } catch (error) {
+      dayChangeNotification(
+        'topRight',
+        "For some reason the mood can't be deleted, try again later...",
+        'Deleting mood failed',
+        api
+      );
+      console.error('Failed to delete mood');
     }
   };
 
@@ -359,9 +180,41 @@ const DayModal: React.FC<{
       year: currentYear,
       moodId: mood.id,
     };
-    await createDayMood(dayMood);
-    setCreateDayMoodLoading(false);
-    // handleOk();
+    try {
+      const newDayMood = await createDayMood(dayMood);
+      setDays((prevDays) =>
+        prevDays.map((day) =>
+          day && day.index === selectedDay
+            ? { ...day, mood: newDayMood.mood }
+            : day
+        )
+      );
+      dayChangeNotification(
+        'topRight',
+        <>
+          <span>Today, you set your mood as: </span>
+          <Tag
+            color={newDayMood.mood.color ? newDayMood.mood.color : ''}
+            key={newDayMood.mood.id}
+          >
+            {newDayMood.mood.name}
+          </Tag>
+        </>,
+        'Mood created succesfully!',
+        api
+      );
+      setCreateDayMoodLoading(false);
+    } catch (error) {
+      console.error('Error creating mood:', error);
+      dayChangeNotification(
+        'topRight',
+        "For some reason the mood can't be created, try again later...",
+        'Creating mood failed',
+        api
+      );
+    } finally {
+      setCreateDayMoodLoading(false);
+    }
   };
 
   const handleCreateDayEvent = async (event: Event) => {
@@ -372,18 +225,68 @@ const DayModal: React.FC<{
       year: currentYear,
       eventId: event.id,
     };
-    await createDayEvent(dayEvent);
-    setCreateDayEventLoading(false);
+    try {
+      const newDayEvent = await createDayEvent(dayEvent);
+      setDays((prevDays) =>
+        prevDays.map((day) =>
+          day && day.index === selectedDay
+            ? { ...day, event: newDayEvent.event }
+            : day
+        )
+      );
+      setCreateDayEventLoading(false);
+      dayChangeNotification(
+        'topRight',
+        <>
+          <span>Today's event: </span>
+          {newDayEvent.event.name}
+        </>,
+        'Event created succesfully!',
+        api
+      );
+    } catch (error) {
+      console.error('Error creating event:', error);
+      dayChangeNotification(
+        'topRight',
+        "For some reason the event can't be created, try again later...",
+        'Creating event failed',
+        api
+      );
+    }
   };
+
+  const handleDeleteMoodTag = async (mood: Mood) => {
+    try {
+      await deleteMood(mood);
+      const newMoods = moods.filter((m) => m.id !== mood.id);
+      setMoods(newMoods);
+      dayChangeNotification(
+        'topRight',
+        `The mood tag "${mood.name}" was deleted with success!`,
+        'Mood tag deleted successfully!',
+        api
+      );
+    } catch (error) {
+      dayChangeNotification(
+        'topRight',
+        <>
+          <span>Deleting the mood tag </span>
+          <Tag color={mood.color ? mood.color : ''} key={mood.id}>
+            {mood.name}
+          </Tag>
+          <span>failed.</span>
+        </>,
+        'Deleting mood tag failed',
+        api
+      );
+    }
+  };
+
   useEffect(() => {
     if (inputVisible) {
       inputRef.current?.focus();
     }
   }, [inputVisible]);
-
-  const handleDeleteMoodTag = async (removedMood: Mood) => {
-    await deleteMoodTag(removedMood);
-  };
 
   const showInput = () => {
     setInputVisible(true);
@@ -524,8 +427,9 @@ const DayModal: React.FC<{
       name: inputValue,
       symbol: emojiPickerEmoji ? emojiPickerEmoji.emoji : '',
     } as Event;
-    const newEvent = await createEvent(event);
-    if (newEvent) {
+
+    try {
+      const newEvent = await createEvent(event);
       const existingEventIndex = events.findIndex(
         (event) => event.name === newEvent.name
       );
@@ -541,10 +445,22 @@ const DayModal: React.FC<{
                 index === existingEventIndex ? newEvent : event
               )
         );
+        dayChangeNotification(
+          'topRight',
+          `You created a new event: ${event.name}`,
+          'Event created successfully',
+          api
+        );
       }
+    } catch (error) {
+      dayChangeNotification(
+        'topRight',
+        `For some reason, creating ${event.name} event failed...`,
+        'Creating event failed',
+        api
+      );
+    } finally {
     }
-
-    // handleCreateDayEvent(event);
   };
 
   const renderEvent = (event: Event) => ({
@@ -600,10 +516,18 @@ const DayModal: React.FC<{
           <Button key='closeModal' onClick={handleCancel} type='primary'>
             Close
           </Button>,
-          <Button key='resetDayMood' onClick={resetDayMood} type='primary'>
+          <Button
+            key='resetDayMood'
+            onClick={handleDeleteDayMood}
+            type='primary'
+          >
             Reset Day Mood
           </Button>,
-          <Button key='resetDayEvent' onClick={resetDayEvent} type='primary'>
+          <Button
+            key='resetDayEvent'
+            onClick={handleDeleteDayEvent}
+            type='primary'
+          >
             Reset Day Event
           </Button>,
         ]}

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../../prisma/client';
 import log from '../../logger';
 
-// Utility function to disconnect Prisma
 const disconnectPrisma = async () => {
   try {
     await prisma.$disconnect();

@@ -1,3 +1,5 @@
+import { Mood } from '@prisma/client';
+
 const moodService = () => {
   const fetchMoods = async () => {
     try {
@@ -18,7 +20,25 @@ const moodService = () => {
     }
   };
 
-  return { fetchMoods };
+  const deleteMood = async (mood: Mood) => {
+    try {
+      const response = await fetch('/api/mood', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: mood.id }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete mood');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  return { fetchMoods, deleteMood };
 };
 
 export default moodService;
