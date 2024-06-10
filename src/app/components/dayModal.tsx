@@ -69,8 +69,9 @@ const DayModal: React.FC<{
   events,
 }) => {
   const [api, contextHolder] = notification.useNotification();
-  const [inputVisible, setInputVisible] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [moodInputVisible, setMoodInputVisible] = useState(false);
+  const [moodInputValue, setMoodInputValue] = useState('');
+  const [eventInputValue, setEventInputValue] = useState('');
   const [colorPickerValue, setColorPickerValue] = useState('rgb(251 146 150)');
   const [emojiPickerEmoji, setEmojiPickerEmoji] = useState<EmojiClickData>();
   const [eventOptions, setEventOptions] = useState<Event[]>([]);
@@ -80,41 +81,7 @@ const DayModal: React.FC<{
   const { createDayMood, deleteDayMood } = dayMoodService();
   const { createDayEvent, deleteDayEvent } = dayEventService();
   const { createEvent } = eventService();
-  const { deleteMood } = moodService();
-  const createNewMoodTag = async (moodName: string) => {
-    try {
-      const response = await fetch('/api/mood', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json', // Set the content type to JSON
-        },
-        body: JSON.stringify({ name: moodName, color: colorPickerValue }),
-      });
-      if (response.ok) {
-        const data: Mood = await response.json();
-        console.log(data);
-        dayChangeNotification(
-          'topRight',
-          `You created a new mood tag: ${moodName}`,
-          'Mood tag created successfully',
-          api
-        );
-        return data;
-      } else {
-        throw new Error('Failed to fetch moods');
-      }
-    } catch (error) {
-      console.log(error);
-      dayChangeNotification(
-        'topRight',
-        `For some reason, creating ${moodName} mood tag failed...`,
-        'Creating mood tag failed',
-        api
-      );
-      return undefined;
-    }
-  };
+  const { deleteMood, createMood } = moodService();
 
   const handleDeleteDayEvent = async () => {
     try {
@@ -217,6 +184,38 @@ const DayModal: React.FC<{
     }
   };
 
+  const handleCreateMood = async () => {
+    try {
+      if (
+        moodInputValue &&
+        !moods.some((mood) => mood.name === moodInputValue)
+      ) {
+        const newMood = await createMood(moodInputValue, colorPickerValue);
+        if (newMood) {
+          setMoods([...moods, newMood]);
+          console.log();
+          dayChangeNotification(
+            'topRight',
+            `You created a new mood tag: ${moodInputValue}`,
+            'Mood tag created successfully',
+            api
+          );
+        }
+      }
+      setMoodInputVisible(false);
+      setMoodInputValue('');
+    } catch (error) {
+      console.log(error);
+      dayChangeNotification(
+        'topRight',
+        `For some reason, creating ${moodInputValue} mood tag failed...`,
+        'Creating mood tag failed',
+        api
+      );
+      return undefined;
+    }
+  };
+
   const handleCreateDayEvent = async (event: Event) => {
     setCreateDayEventLoading(true);
     const dayEvent: DayEvent = {
@@ -283,28 +282,17 @@ const DayModal: React.FC<{
   };
 
   useEffect(() => {
-    if (inputVisible) {
+    if (moodInputVisible) {
       inputRef.current?.focus();
     }
-  }, [inputVisible]);
+  }, [moodInputVisible]);
 
   const showInput = () => {
-    setInputVisible(true);
+    setMoodInputVisible(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleInputConfirm = async () => {
-    if (inputValue && !moods.some((mood) => mood.name === inputValue)) {
-      const newMood = await createNewMoodTag(inputValue);
-      if (newMood) {
-        setMoods([...moods, newMood]);
-      }
-    }
-    setInputVisible(false);
-    setInputValue('');
+  const handleMoodInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMoodInputValue(e.target.value);
   };
 
   const moodTags = moods.map((mood) => (
@@ -361,13 +349,14 @@ const DayModal: React.FC<{
     console.log(e);
     message.error('Click on No');
   };
+
   const onEventSelect = (event: Event) => {
     setSelectedEvent(event);
     handleCreateDayEvent(event);
     console.log(event);
   };
-  const onInputChange = (value: string) => {
-    setInputValue(value);
+  const onEventInputChange = (value: string) => {
+    setEventInputValue(value);
     setSelectedEvent(undefined);
     setEmojiPickerEmoji(undefined);
   };
@@ -415,16 +404,16 @@ const DayModal: React.FC<{
   };
 
   const handleEnterPress = async () => {
-    if (!inputValue) return;
+    if (!eventInputValue) return;
 
     const selectedOption = eventOptions.find(
-      (event) => event.name === inputValue
+      (event) => event.name === eventInputValue
     );
     if (selectedOption) return;
 
-    console.log('Entered:', inputValue);
+    console.log('Entered:', eventInputValue);
     const event: Event = {
-      name: inputValue,
+      name: eventInputValue,
       symbol: emojiPickerEmoji ? emojiPickerEmoji.emoji : '',
     } as Event;
 
@@ -540,36 +529,36 @@ const DayModal: React.FC<{
           {createDayMoodLoading ? <Spin /> : ''}
 
           <Flex gap='10px' wrap vertical>
-            {inputVisible ? (
-              <Input
-                ref={inputRef}
-                type='text'
+            <Flex gap='10px' wrap>
+              <ColorPicker
                 size='small'
-                style={{ width: 100 }}
-                value={inputValue}
-                onChange={handleInputChange}
-                onBlur={handleInputConfirm}
-                onPressEnter={handleInputConfirm}
-                placeholder='Mood name'
+                defaultValue={colorPickerValue}
+                onChange={(_, hex) => {
+                  setColorPickerValue(hexToRgb(hex));
+                }}
               />
-            ) : (
-              <Flex gap='10px' wrap>
-                <ColorPicker
+              {moodInputVisible ? (
+                <Input
+                  ref={inputRef}
+                  type='text'
                   size='small'
-                  defaultValue={colorPickerValue}
-                  onChange={(_, hex) => {
-                    setColorPickerValue(hexToRgb(hex));
-                  }}
+                  style={{ width: 100 }}
+                  value={moodInputValue}
+                  onChange={handleMoodInputChange}
+                  onBlur={handleCreateMood}
+                  onPressEnter={handleCreateMood}
+                  placeholder='Mood name'
                 />
+              ) : (
                 <Tag
                   onClick={showInput}
                   color={colorPickerValue}
                   icon={<PlusOutlined />}
                 >
-                  New Tag
+                  New Mood
                 </Tag>
-              </Flex>
-            )}
+              )}
+            </Flex>
 
             <span className='font-bold'>Create new Event</span>
             <Flex gap='10px' wrap>
@@ -578,12 +567,13 @@ const DayModal: React.FC<{
                 style={{ width: 200 }}
                 onSelect={(value, option) => onEventSelect(option.event)}
                 onSearch={(text) => setEventOptions(getPanelValue(text))}
-                onChange={onInputChange}
+                onChange={onEventInputChange}
               >
                 <Input
                   size='large'
                   placeholder='Create/Select Event'
                   onPressEnter={handleEnterPress}
+                  value={eventInputValue}
                   addonAfter={
                     <Popconfirm
                       title='Pick an emoji'

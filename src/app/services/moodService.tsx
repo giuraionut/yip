@@ -38,7 +38,23 @@ const moodService = () => {
     }
   };
 
-  return { fetchMoods, deleteMood };
+  const createMood = async (moodName: string, moodColor: string) => {
+    try {
+      const response = await fetch('/api/mood', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: moodName, color: moodColor }),
+      });
+      if (!response.ok) throw new Error('Failed to create new mood');
+      return (await response.json()) as Mood;
+    } catch (error) {
+      throw error;
+    }
+  };
+  return { fetchMoods, deleteMood, createMood };
 };
 
 export default moodService;

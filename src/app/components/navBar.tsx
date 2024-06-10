@@ -1,11 +1,14 @@
-import { Button } from 'antd';
 import React from 'react';
-import { SmileFilled } from '@ant-design/icons';
 import ThemeColorPicker from '../themeColorPicker';
+import { Flex } from 'antd';
+import DarkModeToggle from '../darkModeToggle';
 const NavBar: React.FC<{}> = ({}) => {
   return (
     <div className='text-white font-bold bg-slate-700 p-2'>
-      <ThemeColorPicker/>
+      <Flex gap='10px' align='center'>
+        <ThemeColorPicker />
+        <DarkModeToggle />
+      </Flex>
     </div>
   );
 };
