@@ -1,10 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { IMonth } from '../types/interfaces';
-import {
-  HeartOutlined,
-  CheckCircleFilled,
-  LoadingOutlined,
-} from '@ant-design/icons';
 import { Card } from 'antd';
 import Meta from 'antd/es/card/Meta';
 
