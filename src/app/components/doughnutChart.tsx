@@ -10,6 +10,8 @@ import {
 import { Doughnut } from 'react-chartjs-2';
 import { IDay } from '../types/interfaces';
 import { Mood } from '@prisma/client';
+import { useTheme } from '../themeContext';
+import { tailwindColors } from '../utils';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -17,6 +19,7 @@ const DoughnutChart: React.FC<{ days: IDay[] }> = ({ days }) => {
   const [doughnutData, setChartData] = useState<ChartData<'doughnut'>>();
   const [doughnutOptions, setChartOptions] =
     useState<ChartOptions<'doughnut'>>();
+  const { accentColor, darkMode } = useTheme();
 
   useEffect(() => {
     if (days.length > 0) {
@@ -49,7 +52,7 @@ const DoughnutChart: React.FC<{ days: IDay[] }> = ({ days }) => {
             position: 'right',
             align: 'start',
             labels: {
-              color: '#fff',
+              color: darkMode ? tailwindColors.white : tailwindColors.black,
               font: {
                 weight: 'normal',
                 size: 14,
@@ -73,7 +76,7 @@ const DoughnutChart: React.FC<{ days: IDay[] }> = ({ days }) => {
       setChartOptions(dOptions);
       setChartData(dData);
     }
-  }, [days]);
+  }, [days, darkMode]);
 
   return doughnutData && doughnutOptions ? (
     <div className='w-full max-w-md'>

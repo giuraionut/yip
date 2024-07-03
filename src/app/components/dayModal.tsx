@@ -10,13 +10,11 @@ import {
   ColorPicker,
   notification,
   Popconfirm,
-  Space,
-  theme,
   message,
   AutoComplete,
 } from 'antd';
 import { Mood, DayMood, Event, DayEvent } from '@prisma/client';
-import { IDay, MyDayEvent, MyDayMood } from '../types/interfaces';
+import { IDay } from '../types/interfaces';
 import {
   MinusOutlined,
   PlusOutlined,
@@ -64,8 +62,6 @@ const DayModal: React.FC<{
   setCreateDayMoodLoading,
   setCreateDayEventLoading,
   createDayMoodLoading,
-  createDayEventLoading,
-  moodsLoading,
   events,
 }) => {
   const [api, contextHolder] = notification.useNotification();

@@ -17,6 +17,8 @@ import DayModal from './components/dayModal';
 import eventService from './services/eventService';
 import dayEventService from './services/dayEventService';
 import renderDays from './components/renderDays';
+import { tailwindColors } from './utils';
+import { useTheme } from './themeContext';
 const Home: React.FC = () => {
   const currentDate = new Date();
   const [currentDay, currentMonth, currentYear] = [
@@ -43,6 +45,8 @@ const Home: React.FC = () => {
   const { fetchEvents } = eventService();
   const { fetchDayEvents } = dayEventService();
   const { renderMonthDays } = renderDays();
+  const { accentColor, darkMode } = useTheme();
+
   const tabsExtraAction = (
     <Link href='https://www.google.ro'>View more statistics</Link>
   );
@@ -166,7 +170,7 @@ const Home: React.FC = () => {
           </div>
 
           <div className='flex flex-col gap-3 p-5'>
-            <div className='font-bold p-2 rounded-md'>
+            <div className='font-bold p-2 rounded-md' style={{color: darkMode ? tailwindColors.white : tailwindColors.black}}>
               {currentMonthName(selectedMonth)}
             </div>
             <DayCards

@@ -53,13 +53,13 @@ const DayCards: React.FC<{
                     ? day?.mood
                       ? day.mood.color
                       : day?.currentDay
-                      ? 'rgb(30 0 160)'
-                      : 'rgb(50 65 85)'
+                      ? ''
+                      : ''
                     : '',
                 }}
                 key={day ? day.index : `${weekIndex}-${dayIndex}`}
                 className={`text-white text-center border-none ${
-                  day ? 'hover:cursor-pointer hover:brightness-125' : ''
+                  day ? 'hover:cursor-pointer hover:contrast-125' : ''
                 }`}
                 onClick={() => {
                   if (day) {

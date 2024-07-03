@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import React from 'react';
 import Provider from './provider';
 import { ThemeProvider, useTheme } from './themeContext';
@@ -19,7 +19,7 @@ const ThemeWrapperContent: React.FC<{ children: React.ReactNode }> = ({
   const { accentColor, darkMode } = useTheme();
 
   return (
-    <html lang='en' className={darkMode ? 'bg-slate-500' : ''}>
+    <html lang='en' className={darkMode ? 'bg-gray-900' : 'bg-white'}>
       <body>
         <Provider>{children}</Provider>
       </body>

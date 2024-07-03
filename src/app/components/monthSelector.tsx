@@ -33,7 +33,7 @@ const MonthSelector: React.FC<{
           key={month.title}
           className={`${
             selectedMonth === month.index ? 'bg-blue-400 ' : ''
-          } text-center border-none hover:cursor-pointer hover:brightness-125`}
+          } text-center border-none hover:cursor-pointer hover:contrast-125`}
           onClick={() => setSelectedMonth(month.index)}
         >
           <Meta

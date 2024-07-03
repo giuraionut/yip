@@ -13,6 +13,8 @@ import {
 import { Radar } from 'react-chartjs-2';
 import { IDay } from '../types/interfaces';
 import { Mood } from '@prisma/client';
+import { useTheme } from '../themeContext';
+import { tailwindColors } from '../utils';
 
 ChartJS.register(
   RadialLinearScale,
@@ -26,6 +28,8 @@ ChartJS.register(
 const RadarChart: React.FC<{ days: IDay[] }> = ({ days }) => {
   const [radarOptions, setRadarOptions] = useState<ChartOptions<'radar'>>();
   const [radarData, setRadarData] = useState<ChartData<'radar'>>();
+  const { accentColor, darkMode } = useTheme();
+
   useEffect(() => {
     if (days.length > 0) {
       const currentMonthMoods: Mood[] = days
@@ -58,7 +62,7 @@ const RadarChart: React.FC<{ days: IDay[] }> = ({ days }) => {
             position: 'right',
             align: 'start',
             labels: {
-              color: '#fff',
+              color: darkMode ? tailwindColors.white : tailwindColors.black,
               font: {
                 weight: 'normal',
                 size: 14,
@@ -82,7 +86,7 @@ const RadarChart: React.FC<{ days: IDay[] }> = ({ days }) => {
       setRadarOptions(rOptions);
       setRadarData(rData);
     }
-  }, [days]);
+  }, [days, darkMode]);
 
   return radarData && radarOptions ? (
     <div className='w-full max-w-md'>
