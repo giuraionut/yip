@@ -30,6 +30,7 @@ import dayMoodService from '../services/dayMoodService';
 import dayEventService from '../services/dayEventService';
 import eventService from '../services/eventService';
 import moodService from '../services/moodService';
+import { useTheme } from '../themeContext';
 
 const DayModal: React.FC<{
   isModalOpen: boolean;
@@ -78,6 +79,7 @@ const DayModal: React.FC<{
   const { createDayEvent, deleteDayEvent } = dayEventService();
   const { createEvent } = eventService();
   const { deleteMood, createMood } = moodService();
+  const { accentColor, darkMode } = useTheme();
 
   const handleDeleteDayEvent = async () => {
     try {
@@ -233,7 +235,7 @@ const DayModal: React.FC<{
       dayChangeNotification(
         'topRight',
         <>
-          <span>Today's event: </span>
+          <span>Today&apos;s event: </span>
           {newDayEvent.event.name}
         </>,
         'Event created succesfully!',
@@ -577,7 +579,7 @@ const DayModal: React.FC<{
                       description={
                         <div onMouseDown={(e) => e.stopPropagation()}>
                           <EmojiPicker
-                            theme={Theme.DARK}
+                            theme={darkMode ? Theme.DARK : Theme.LIGHT}
                             autoFocusSearch={true}
                             lazyLoadEmojis={true}
                             onEmojiClick={(emoji) => setEmojiPickerEmoji(emoji)}
