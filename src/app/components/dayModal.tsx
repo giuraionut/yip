@@ -182,6 +182,7 @@ const DayModal: React.FC<{
     }
   };
 
+
   const handleCreateMood = async () => {
     try {
       if (

@@ -78,7 +78,7 @@ const Home: React.FC = () => {
       }
     };
     loadMoods();
-  }, [fetchMoods]);
+  }, []);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -92,7 +92,7 @@ const Home: React.FC = () => {
       }
     };
     loadEvents();
-  }, [fetchEvents]);
+  }, []);
 
   useEffect(() => {
     const loadDays = async () => {
@@ -121,7 +121,7 @@ const Home: React.FC = () => {
       setDaysLoading(false);
     };
     loadDays();
-  }, [selectedMonth, currentYear, fetchDayEvents, fetchDayMoods, renderMonthDays]);
+  }, [selectedMonth, currentYear]);
 
   return daysLoading ? (
     <div>
