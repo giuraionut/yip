@@ -151,7 +151,6 @@ const Home: React.FC = () => {
       />
 
       <div>
-        <NavBar />
         <div className='grid grid-cols-2 gap-2'>
           <div className='flex flex-col gap-3 p-5'>
             <div className='font-bold p-2 rounded-md'>{currentYear}</div>
@@ -171,7 +170,12 @@ const Home: React.FC = () => {
           </div>
 
           <div className='flex flex-col gap-3 p-5'>
-            <div className='font-bold p-2 rounded-md' style={{color: darkMode ? tailwindColors.white : tailwindColors.black}}>
+            <div
+              className='font-bold p-2 rounded-md'
+              style={{
+                color: darkMode ? tailwindColors.white : tailwindColors.black,
+              }}
+            >
               {currentMonthName(selectedMonth)}
             </div>
             <DayCards

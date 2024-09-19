@@ -1,9 +1,0 @@
--- CreateTable
-CREATE TABLE "DayMood" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "moodId" INTEGER NOT NULL,
-    "day" INTEGER NOT NULL,
-    "month" INTEGER NOT NULL,
-    "year" INTEGER NOT NULL,
-    CONSTRAINT "DayMood_moodId_fkey" FOREIGN KEY ("moodId") REFERENCES "Mood" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
-);
